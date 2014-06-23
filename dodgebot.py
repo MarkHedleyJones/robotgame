@@ -1,5 +1,3 @@
-
-
 # Simplebot by ramk13
 # Open source bot with really simple rules
 # Feel free to use this as the starting point for a bot
@@ -180,6 +178,14 @@ class Robot:
 
 
         move = moving(safest_adjacent(me, dangerfield))
+
+
+        # 
+        for friendly in friendlies:
+            dangerfield[friendly[0]][friendly[1]] = 'F'
+
+        for enemy in enemies:
+            dangerfield[enemy[0]][enemy[1]] = 'E'
 
         if len(taken_moves) == len(friendlies):
             print_dangerfield(dangerfield)
