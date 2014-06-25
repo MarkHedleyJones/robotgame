@@ -33,7 +33,7 @@ spawn = {(7,1),(8,1),(9,1),(10,1),(11,1),(5,2),(6,2),(12,2),(13,2),(3,3),(4,3),(
 # set of all obstacle locations
 obstacle = {(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(11,0),(12,0),(13,0),(14,0),(15,0),(16,0),(17,0),(18,0),(0,1),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(12,1),(13,1),(14,1),(15,1),(16,1),(17,1),(18,1),(0,2),(1,2),(2,2),(3,2),(4,2),(14,2),(15,2),(16,2),(17,2),(18,2),(0,3),(1,3),(2,3),(16,3),(17,3),(18,3),(0,4),(1,4),(2,4),(16,4),(17,4),(18,4),(0,5),(1,5),(17,5),(18,5),(0,6),(1,6),(17,6),(18,6),(0,7),(18,7),(0,8),(18,8),(0,9),(18,9),(0,10),(18,10),(0,11),(18,11),(0,12),(1,12),(17,12),(18,12),(0,13),(1,13),(17,13),(18,13),(0,14),(1,14),(2,14),(16,14),(17,14),(18,14),(0,15),(1,15),(2,15),(16,15),(17,15),(18,15),(0,16),(1,16),(2,16),(3,16),(4,16),(14,16),(15,16),(16,16),(17,16),(18,16),(0,17),(1,17),(2,17),(3,17),(4,17),(5,17),(6,17),(12,17),(13,17),(14,17),(15,17),(16,17),(17,17),(18,17),(0,18),(1,18),(2,18),(3,18),(4,18),(5,18),(6,18),(7,18),(8,18),(9,18),(10,18),(11,18),(12,18),(13,18),(14,18),(15,18),(16,18),(17,18),(18,18)}
 center = rg.CENTER_POINT
-
+move_count = 0
 # danger = [
 #     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
 #     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
@@ -89,17 +89,10 @@ def squares_dist(position, distance):
             out += [(px+x,py+y), (px+y,py-x), (px-x,py-y), (px-y,py+x)]
         return out
 
-def print_dangerfield(dangerfield):
-    for row in dangerfield:
+def print_field(field):
+    for row in field:
         for i, x in enumerate(row):
-            if x == 0:
-                print('0   '),
-            elif x < 10:
-                print(str(int(x)) + '   '),
-            elif x < 100:
-                print(str(int(x)) + '  '),
-            else:
-                print(str(int(x)) + ' '),
+            print('{0:4d}'.format(int(x))),
             if i == len(row) - 1:
                 print()
 
@@ -107,7 +100,9 @@ def print_dangerfield(dangerfield):
 class Robot:
     def act(self, game):
 
-        dangerfield = list(numpy.zeros((18,18)))
+        dangerfield = numpy.zeros((19,19))
+        supportfield = numpy.zeros((19,19))
+        mask = numpy.zeros((19,19))
 
         # Used to make the code a little more readable
         robots = game.robots
@@ -115,7 +110,7 @@ class Robot:
         # Use turn_number to tell if this is the first robot called this turn
         # If so, then clear the list of taken moves
         # The list of taken moves is used to prevent bots from running into each other
-        global turn_number, taken_moves
+        global turn_number, taken_moves, move_count
         if game.turn != turn_number:
             turn_number = game.turn
             taken_moves = set()
@@ -168,27 +163,47 @@ class Robot:
 
         move = []
 
+        # Map out the danger field from the enemies
         for enemy in enemies:
             enemy_health = robots[enemy].hp
-            dangerfield[enemy[0]][enemy[1]] = enemy_health * 2
+            dangerfield[enemy[0]][enemy[1]] += enemy_health * 2
             for distance in [ x+1 for x in range(int(math.ceil(enemy_health/attack_damage)))]:
                 for x,y in squares_dist(enemy, distance):
                     if x > 0 and y > 0 and x < 18 and y < 18:
                         dangerfield[x][y] += int(math.ceil(enemy_health / distance))
 
+        # Map out the support field from friendlies
+        for friend in friendlies:
+            friend_health = robots[friend].hp
+            supportfield[friend[0]][friend[1]] += friend_health * 2
+            for distance in [ x+1 for x in range(int(math.ceil(friend_health/attack_damage)))]:
+                for x,y in squares_dist(friend, distance):
+                    if x > 0 and y > 0 and x < 18 and y < 18:
+                        supportfield[x][y] += int(math.ceil(friend_health / distance))
+
+        # Add values for the spawn points and obstacles
+        for square in spawn:
+            mask[square[0]][square[1]] += 100
+            for distance in [x+1 for x in range(3)]:
+                for x, y in squares_dist(square, distance):
+                    if within_bounds((x,y)):
+                        mask[x][y] += int(50/distance)
+
+        for square in obstacle:
+            mask[square[0]][square[1]] = 5000
+
+        # Find safest location on the map
+        print(numpy.argmin(dangerfield))
 
         move = moving(safest_adjacent(me, dangerfield))
 
+        move_count += 1
+        if move_count == (len(friendlies)):
+            print_field(dangerfield)
+            print_field(supportfield)
+            print_field(mask)
+            move_count = 0
 
-        # 
-        for friendly in friendlies:
-            dangerfield[friendly[0]][friendly[1]] = 'F'
-
-        for enemy in enemies:
-            dangerfield[enemy[0]][enemy[1]] = 'E'
-
-        if len(taken_moves) == len(friendlies):
-            print_dangerfield(dangerfield)
 
 
         return move
