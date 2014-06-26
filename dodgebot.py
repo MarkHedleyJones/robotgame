@@ -201,6 +201,16 @@ class Robot:
 
         for square in obstacle:
             mask[square[0]][square[1]] = 100
+        
+        fields = numpy.array([dangerfield,
+                              supportfield,
+                              penaltyfield,
+                              mask])
+
+        weights = numpy.array([1.0, 1.0, 1.0, 1.0])
+
+        print(fields*weights)
+
 
 
 
@@ -208,7 +218,7 @@ class Robot:
         print(numpy.argmin(dangerfield))
 
         move = moving(safest_adjacent(me, dangerfield))
-
+        constants = numpy.array([1.0,-1.0,1.0,1.0])
         move_count += 1
         if move_count == (len(friendlies)):
             print_field(dangerfield)
@@ -218,6 +228,8 @@ class Robot:
             print_field(mask)
             print()
             print_field(penaltyfield)
+            print('The output field')
+            print_field(dangerfield - supportfield)
             move_count = 0
 
 
