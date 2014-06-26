@@ -102,6 +102,7 @@ class Robot:
 
         dangerfield = numpy.zeros((19,19))
         supportfield = numpy.zeros((19,19))
+        penaltyfield = numpy.zeros((19,19))
         mask = numpy.zeros((19,19))
 
         # Used to make the code a little more readable
@@ -176,6 +177,9 @@ class Robot:
         for friend in friendlies:
             friend_health = robots[friend].hp
             supportfield[friend[0]][friend[1]] += friend_health * 2
+            penaltyfield[friend[0]][friend[1]] += 100
+            for x,y in around(friend):
+                penaltyfield[x][y] += 50
             for distance in [ x+1 for x in range(int(math.ceil(friend_health/attack_damage)))]:
                 for x,y in squares_dist(friend, distance):
                     if x > 0 and y > 0 and x < 18 and y < 18:
@@ -183,14 +187,22 @@ class Robot:
 
         # Add values for the spawn points and obstacles
         for square in spawn:
-            mask[square[0]][square[1]] += 100
-            for distance in [x+1 for x in range(3)]:
+            mask[square[0]][square[1]] += 0
+            for distance in [x+1 for x in range(5)]:
                 for x, y in squares_dist(square, distance):
                     if within_bounds((x,y)):
-                        mask[x][y] += int(50/distance)
+                        mask[x][y] += int(20/distance)
+
+        # Normalise fields
+        for field in [dangerfield, supportfield, penaltyfield]:
+            field /= numpy.max(field)
+            field *= 100.0
+
 
         for square in obstacle:
-            mask[square[0]][square[1]] = 5000
+            mask[square[0]][square[1]] = 100
+
+
 
         # Find safest location on the map
         print(numpy.argmin(dangerfield))
@@ -200,8 +212,12 @@ class Robot:
         move_count += 1
         if move_count == (len(friendlies)):
             print_field(dangerfield)
+            print()
             print_field(supportfield)
+            print()
             print_field(mask)
+            print()
+            print_field(penaltyfield)
             move_count = 0
 
 
