@@ -100,10 +100,14 @@ def print_field(field):
 class Robot:
     def act(self, game):
 
-        dangerfield = numpy.zeros((19,19))
-        supportfield = numpy.zeros((19,19))
-        penaltyfield = numpy.zeros((19,19))
-        mask = numpy.zeros((19,19))
+        dangerfield = numpy.zeros((19,19))      # Where the danger is
+        supportfield = numpy.zeros((19,19))     # Where my friends are
+        penaltyfield = numpy.zeros((19,19))     # Where it would be stupid to move
+        spawnfield = numpy.zeros((19,19))       # Where the spawns happen
+        innerfield = numpy.zeros((19,19))       # Slope toward the center
+        logicfield = numpy.zeros((19,19))       # Result of combining the others
+        mask = numpy.zeros((19,19))             # Where the obsticles are
+
 
         # Used to make the code a little more readable
         robots = game.robots
@@ -111,7 +115,7 @@ class Robot:
         # Use turn_number to tell if this is the first robot called this turn
         # If so, then clear the list of taken moves
         # The list of taken moves is used to prevent bots from running into each other
-        global turn_number, taken_moves, move_count
+        global turn_number, taken_moves, move_count, center
         if game.turn != turn_number:
             turn_number = game.turn
             taken_moves = set()
@@ -170,66 +174,79 @@ class Robot:
             dangerfield[enemy[0]][enemy[1]] += enemy_health * 2
             for distance in [ x+1 for x in range(int(math.ceil(enemy_health/attack_damage)))]:
                 for x,y in squares_dist(enemy, distance):
-                    if x > 0 and y > 0 and x < 18 and y < 18:
+                    if within_bounds((x,y)):
                         dangerfield[x][y] += int(math.ceil(enemy_health / distance))
 
         # Map out the support field from friendlies
         for friend in friendlies:
             friend_health = robots[friend].hp
             supportfield[friend[0]][friend[1]] += friend_health * 2
+            for distance in [ x+1 for x in range(int(math.ceil(friend_health/attack_damage)))]:
+                for x,y in squares_dist(friend, distance):
+                    if within_bounds((x,y)):
+                        supportfield[x][y] += int(math.ceil(friend_health / distance))
+
+        # Map out the penalty field
+        for friend in friendlies:
             penaltyfield[friend[0]][friend[1]] += 100
             for x,y in around(friend):
                 penaltyfield[x][y] += 50
-            for distance in [ x+1 for x in range(int(math.ceil(friend_health/attack_damage)))]:
-                for x,y in squares_dist(friend, distance):
-                    if x > 0 and y > 0 and x < 18 and y < 18:
-                        supportfield[x][y] += int(math.ceil(friend_health / distance))
 
-        # Add values for the spawn points and obstacles
-        for square in spawn:
-            mask[square[0]][square[1]] += 0
-            for distance in [x+1 for x in range(5)]:
-                for x, y in squares_dist(square, distance):
-                    if within_bounds((x,y)):
-                        mask[x][y] += int(20/distance)
+        # Map out the spawn field
+        for x,y in spawn:
+            for a,b in around((x,y)):
+                if within_bounds((a,b)):
+                    spawnfield[a][b] += 25
+        for x,y in spawn:
+            spawnfield[x][y] = 100
+
+        # Map out the innerfield
+        for distance in range(1,12):
+            for x,y in squares_dist(center, distance):
+                if within_bounds((x,y)):
+                    innerfield[x][y] = distance
+
+        # Map out the mask
+        for x,y in obstacle:
+            mask[x][y] = 100
+
+
+        fields = [dangerfield, supportfield, penaltyfield, spawnfield, innerfield]
+        weight = [1.0, -1.0, 1.0, 1.0, 1.0]
 
         # Normalise fields
-        for field in [dangerfield, supportfield, penaltyfield]:
+        for field in fields:
             field /= numpy.max(field)
             field *= 100.0
 
 
-        for square in obstacle:
-            mask[square[0]][square[1]] = 100
-        
-        fields = numpy.array([dangerfield,
-                              supportfield,
-                              penaltyfield,
-                              mask])
-
-        weights = numpy.array([1.0, 1.0, 1.0, 1.0])
-
-        print(fields*weights)
-
-
-
+        for i, field in enumerate(fields):
+            logicfield += field * weight[i]
+        logicfield += mask
 
         # Find safest location on the map
         print(numpy.argmin(dangerfield))
 
         move = moving(safest_adjacent(me, dangerfield))
-        constants = numpy.array([1.0,-1.0,1.0,1.0])
+        
         move_count += 1
         if move_count == (len(friendlies)):
+            print('Danger')
             print_field(dangerfield)
-            print()
+            print('Support')
             print_field(supportfield)
-            print()
+            print('Penalty')
+            print_field(penaltyfield)
+            print('Spawn')
+            print_field(spawnfield)
+            print('Inner')
+            print_field(innerfield)
+            print('Mask')
             print_field(mask)
             print()
-            print_field(penaltyfield)
+#            print_field(penaltyfield)
             print('The output field')
-            print_field(dangerfield - supportfield)
+            print_field(logicfield)
             move_count = 0
 
 
