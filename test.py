@@ -2,7 +2,7 @@ import os
 import subprocess
 import numpy
 
-out = subprocess.check_output(["rgrun", "gypsy.py", "simplebot.py", "-H", "-c", "50"]).decode()
+out = subprocess.check_output(["rgrun", "dodgebot.py", "simplebot.py", "-H", "-c", "50"]).decode()
 
 runs = []
 lines = out.split("\n")
@@ -16,4 +16,4 @@ for line in list(lines):
 a = numpy.array(runs)
 
 print("Mean kills: " + str(int(a.mean() * 100)) + "%")
-print("Variance:   " + str(int(a.var()) * 100) + "%")
+print("Variance: " + str(int(a.var()) * 100) + "%")
