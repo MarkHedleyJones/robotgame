@@ -24,7 +24,7 @@
 import rg
 import numpy as np
 import math
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 turn_number = -1
 attack_damage = 10
@@ -38,6 +38,7 @@ obstacle = {(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(
 center = rg.CENTER_POINT
 move_count = 0
 
+movements = np.zeros((19,19))
 logicfield = np.zeros((19,19))
 
 # danger = [
@@ -88,8 +89,30 @@ def blur(field):
     return normalise(out)
 
 
-def safest_adjacent((x,y), logicfield, taken_moves):
-    options = around( (x,y) ) - taken_moves
+def move_options( (x,y), logicfield, movements):
+    available = around( (x,y) )
+    free = []
+    for option in available:
+        status = movements[option[0]][option[1]]
+        if status <= 1:
+            free.append({
+                'pos': option,
+                'logic': logicfield[option[0]][option[1]],
+                'status': 'free' if status == 0 else 'pending'
+            })
+
+    return free
+
+def safest_adjacent((x,y), logicfield, movements):
+    options = around( (x,y) )
+    free = []
+    for option in options:
+        status = movements[option[0]][option[1]]
+        if status == 0:
+            free.append(option)
+        elif status == 2:
+            pass
+    options = free
     if options:
         return min(options, key=lambda (x,y): logicfield[x][y])
     else:
@@ -116,10 +139,10 @@ def print_field(field):
             if i == len(row) - 1:
                 print()
 
-def plot_field(field,filename):
-    plt.clf()
-    plt.imshow(field,interpolation='nearest')
-    plt.savefig(filename,format='pdf')
+#def plot_field(field,filename):
+#    plt.clf()
+#    plt.imshow(field,interpolation='nearest')
+#    plt.savefig(filename,format='pdf')
 
 
 def combine_pdfs(filenames, outputFilename):
@@ -164,19 +187,22 @@ class Robot:
         # Use turn_number to tell if this is the first robot called this turn
         # If so, then clear the list of taken moves
         # The list of taken moves is used to prevent bots from running into each other
-        global turn_number, taken_moves, move_count, center, logicfield
+        global turn_number, taken_moves, move_count, center, logicfield, movements
 
         if game.turn != turn_number:
             turn_number = game.turn
             taken_moves = set()
 
         # If moving save the location we are moving to
-        def moving(loc):
-            taken_moves.add(loc)
-            return ['move', loc]
+        def moving(me,to):
+            taken_moves.add(to)
+            movements[me[0]][me[1]] = 0
+            movements[to[0]][to[1]] = 2
+            return ['move', to]
 
         # If staying save the location that we are at
         def staying(act,loc=center):
+            movements[bot[0]][bot[1]] = 2
             taken_moves.add(bot)
             return [act, loc]
 
@@ -219,6 +245,9 @@ class Robot:
 
         if taken_moves == set():
 
+            for friend in friendlies:
+                movements[friend[0]][friend[1]] = 1
+
             dangerfield = np.zeros((19,19))      # Where the danger is
             supportfield = np.zeros((19,19))     # Where my friends are
             penaltyfield = np.zeros((19,19))     # Where it would be stupid to move
@@ -236,21 +265,6 @@ class Robot:
                     for x,y in squares_dist(enemy, distance):
                         if within_bounds((x,y)):
                             dangerfield[x][y] += int(math.ceil(enemy_health / distance))
-
-            # Map out the support field from friendlies
-            for friend in friendlies:
-                friend_health = robots[friend].hp
-                supportfield[friend[0]][friend[1]] += friend_health * 2
-                for distance in [ x+1 for x in range(int(math.ceil(friend_health/attack_damage)))]:
-                    for x,y in squares_dist(friend, distance):
-                        if within_bounds((x,y)):
-                            supportfield[x][y] += int(math.ceil(friend_health / distance))
-
-            # Map out the penalty field
-            for friend in friendlies:
-                penaltyfield[friend[0]][friend[1]] += 100
-                for x,y in around(friend):
-                    penaltyfield[x][y] += 50
 
             # Map out the spawn field
             for x,y in spawn:
@@ -271,8 +285,8 @@ class Robot:
                 mask[x][y] = 100
 
 
-            fields = [dangerfield, supportfield, penaltyfield, spawnfield, innerfield]
-            weight = [1.0, -0.5, 1.0, 1.0, 1.0]
+            fields = [dangerfield, spawnfield, innerfield]
+            weight = [0.26, 0.333, 0.8]
 
             # Normalise fields
             for field in fields:
@@ -292,24 +306,45 @@ class Robot:
 #            plot_field(logicfield,filename)
 
 
-        
-        safest_move = safest_adjacent(me, logicfield, taken_moves)
 
 
-        if safest_move is None:
-            safest_move = list(around(me))[0]
+        options = move_options(me, logicfield, movements)
+        for option in options:
 
-        gain_move = fieldval(me, logicfield)-fieldval(safest_move, logicfield)
+        print(options)
 
-        if gain_move <= 0:
-            move = staying('guard')
-        else:
-            move = moving(safest_move)
+#        safest_move = safest_adjacent(me, logicfield, movements)
+#        move_gain = 0
+#        if safest_move is None:
+#            move_gain = 0.0
+#            instinct = 'stay'
+#        else:
+#            move_gain = fieldval(me, logicfield)-fieldval(safest_move, logicfield)
+#            instinct = 'move'
+#
+#        if instinct == 'move':
+#            move = moving(me,safest_move)
+#        else:
+#            move = staying('guard')
+#
+#        print_field(movements)
 
-        next_pos = move[1]
-        next_adj = set(around(next_pos)) - set(me)
-        if next_adj & enemies:
-            move = staying('attack', next_pos)
+#        if safest_move is None:
+#            safest_move = list(around(me))[0]
+#
+#        move = moving(safest_move)
+#
+#        gain_move = fieldval(me, logicfield)-fieldval(safest_move, logicfield)
+#
+#        if gain_move <= 0:
+#            move = staying('guard')
+#        else:
+#            move = moving(safest_move)
+#
+#        next_pos = move[1]
+#        next_adj = set(around(next_pos)) - set(me)
+#        if next_adj & enemies:
+#            move = staying('attack', next_pos)
 
 #        imminent_danger = set(around(me)) & enemies
 
