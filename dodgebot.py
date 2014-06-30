@@ -24,6 +24,7 @@
 import rg
 import numpy as np
 import math
+import pdb
 #import matplotlib.pyplot as plt
 
 turn_number = -1
@@ -214,7 +215,6 @@ class Robot:
         # Setup basic sets of robots
         me = self.location
         friendlies = set([bot for bot in robots if robots[bot].player_id==self.player_id])
-
         enemies = set(robots)-friendlies
         adjacent = around(me)
 
@@ -306,12 +306,17 @@ class Robot:
 #            plot_field(logicfield,filename)
 
 
-
+        move = []
 
         options = move_options(me, logicfield, movements)
+        options = sorted(options, key=lambda x: x['logic'])
         for option in options:
+            if option['status'] == 'free':
+                move = moving(me, option['pos'])
+                break;
+            
 
-        print(options)
+#        print(options)
 
 #        safest_move = safest_adjacent(me, logicfield, movements)
 #        move_gain = 0
