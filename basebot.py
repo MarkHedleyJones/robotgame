@@ -123,17 +123,20 @@ class Robot:
 
 
             # Map out the danger field from the enemies
-            dangerfield = newfield()
+            fields = {}
+            fields['enemy_healthDensity'] = newfield()
+            fields['enemy_adjacency'] = newfield()
+
             for enemy in enemies:
                 x,y = robots[enemy].location
-                history[turn]['them_now'][x][y] = robots[enemy].hp
-                dangerfield[x][y] += robots[enemy].hp * 2
+                history[turn]['them_now'][x][y] = 1
+                fields['enemyhealth'][x][y] += robots[enemy].hp * 2
+                for pos in squares_dist(enemy, 1):
+                    fields['enemy_adjacency'] += 1
                 for distance in [ x+1 for x in range(int(math.ceil(robots[enemy].hp/attack_damage)))]:
                     for pos in squares_dist(enemy, distance):
                         if within_bounds(pos):
-                            dangerfield[pos[0]][pos[1]] += int(math.ceil(robots[enemy].hp / distance))
-
-            dangerfield = normalise(dangerfield)
+                            fields['enemyhealth'][pos[0]][pos[1]] += int(math.ceil(robots[enemy].hp / distance))
 
             fields = [dangerfield, staticfield['spawn'], staticfield['inner']]
             weight = [0.26, 0.1 * (turn % 10), 0.6]

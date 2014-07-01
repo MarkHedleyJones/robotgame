@@ -65,31 +65,36 @@ def blur(field):
 def locate_min(field):
     min_element = np.argmin(field)
     return (min_element % len(field[0]), min_element / len(field[0]))
-print('orig')
-print_field(field)
-x = blur(field)
-print('blurred')
-print_field(x)
-x = blur(x)
-print('blurred x2')
-print_field(x)
-x = blur(x)
-print('blurred x3')
-print_field(x)
-
-print(locate_min(x))
-
-sys.exit()
 
 
 
+def minset(pos):
+    print('pos[0]')
+    print([pos[0]])
+    print('pos[1:]')
+    print(pos[1:])
+    print('')
+    if len(pos) == 1:
+        print('fired')
+        return [x for x in pos[0]]
+    else:
+        return [x + minset(pos[1:]) for x in pos[0]]
+#        return sel + [minset(poss[1:],store[:].extend(poss[0][x])) for x in range(len(poss[0]))]
 
-print_field(field)
-min_element = np.argmin(field)
-x = min_element % len(field[0])
-y = min_element / len(field[0])
-print(min_element)
-print('x = ' + str(x))
-print('y = ' + str(y))
 
-print(locate_min(field))
+pos = [
+    [((1, 11), 90.588500818145917), ((1, 9), 85.665519381594535)],
+    [((17, 10), 89.61236810923657), ((16, 9), 51.850702477007282)],
+    [((9, 2), 50.347006714438869), ((8, 1), 89.392315070811961)],
+    [((3, 4), 100.0), ((4, 3), 99.339840884726073)]
+]
+print(pos)
+print('')
+import itertools
+a = list(itertools.product(*pos))
+for b in a:
+    print(b)
+
+#com = minset(pos)
+#for c in com:
+#    print(c)
