@@ -6,7 +6,7 @@ import itertools
 import sys
 import time
 import operator
-
+import sys
 game_turn = -1
 attack_damage = 10
 
@@ -161,6 +161,44 @@ def pick_optimal(members):
     else:
         return None
 
+def pick_best(members):
+    top_score = -9999
+    scores = {}
+    num_members = len(members)
+    options = []
+    result = None
+
+    for member in members:
+        start = coord_to_cell(member[0])
+        moves = [(start,coord_to_cell(end)) for end in member[1]]
+        for index, move in enumerate(moves):
+            scores[move] = member[2][index]
+        options.append(moves)
+
+    for possibility in itertools.product(*options):
+    	ends = [y for x,y in possibility]
+        if len(set([y for x,y in possibility])) != num_members:
+            continue
+        if set(possibility) & set([(y,x) for x,y in possibility if x != y]):
+            continue
+
+        score = sum([scores[move] for move in possibility])
+        if score > top_score:
+            result, top_score = possibility, score
+
+    if result is None:
+        print('')
+        print('NO RESULT from picking best')
+        print(members)
+        print('')
+        print(options)
+        return None
+    else:
+        return [(cell_to_coord(y)) for x,y in result]
+
+
+
+
 
 def num_combinations(possibility_array):
     num_combinations = 1
@@ -174,8 +212,126 @@ def movement_gains(bot_action, field):
     moves = bot_action[1]
     return [(field[ex][ey] - field[sx][sy]) for (ex,ey) in moves]
 
+def make_reduction(system, move_granted):
+    # TO HERE!!!!!!!!
+
+
+def reduce_system(reduced):
+    # Find the square with the most heat
+    cells = {}
+    for member in reduced:
+        for cell in member[1]:
+            if cell in cells:
+                cells[cell] += 1
+            else:
+                cells[cell] = 1
+
+    print('cells')
+    print(cells)
+
+    hot_cell = max(cells.iteritems(), key=operator.itemgetter(1))[0]
+    print('hot cell')
+    print(hot_cell)
+
+    candidates = {}
+    for index, member in enumerate(reduced):
+        if hot_cell in member[1]:
+            score = member[2][member[1].index(hot_cell)]
+            candidates[member[0]] = score
+
+    print('candidates')
+    print(candidates)
+
+    # If this square is the only available move for a candidate,
+    # grant it to that candidate
+    best_candidate = [x[0] for x in reduced if x[0] in candidates and len(x[1]) == 1]
+    print('candidate that NEEDS this move')
+    print(best_candidate)
+
+    # If not best candidate at this point, find the most deserving
+    if best_candidate == []:
+        print('no necessary candidate, selecting by value')
+
+        # for purge in range(level):
+        #     print('Removing default candidate as that caused bad')
+        #     print('removing key ' + str(max(candidates.iteritems(), key=operator.itemgetter(1))[0]))
+        #     del candidates[max(candidates.iteritems(), key=operator.itemgetter(1))[0]]
+        #     print('candidates are now...')
+        #     print(candidates)
+        max_score = -9999
+        for candidate in candidates.iteritems():
+            if candidate[1] > max_score:
+                max_score = candidate[1]
+        print('max score = ' + str(max_score))
+
+        best_candidates = []
+        for candidate in candidates.iteritems():
+            if candidate[1] == max_score:
+                best_candidates.append(candidate[0])
+        print('best candidates = ' + str(best_candidates))
+
+        # Filter out candidates who would cause a bot to be left with no moves
+        for candidate in best_candidates[:]:
+            for member in reduced:
+                if member[0] == hot_cell:
+                    if set(member[1]) - set([hot_cell, candidate]) == set():
+                        print('detected and removed bad candidate' + str(candidate))
+                        best_candidates.remove(candidate)
+                else:
+                    # Test to see if bad outcomes occur
+
+
+        best_candidate = random.choice(best_candidates)
+        print('best_candidate (chosen at random)')
+        print(best_candidate)
+    elif len(best_candidate) > 1:
+        print('SHIT')
+        return None
+    else:
+        best_candidate = best_candidate[0]
+
+    print('orig')
+    for member in reduced:
+        print(member)
+
+    # MOVE FROM HERE!!!!!!!!
+    reduced2 = reduced[:]
+    for member in reduced2:
+        if member[0] == best_candidate:
+            # Make this move the only option for the winner
+            member[1] = [hot_cell]
+            member[2] = [candidates[member[0]]]
+        else:
+            if member[0] == hot_cell:
+                print('The winner is moving into this bots place')
+                print(member)
+                # Remove bot swap as an option for target square
+                try:
+                    swap_index = member[1].index(best_candidate)
+                    print('A swap condidion exists')
+                except:
+                    swap_index = None
+                if swap_index:
+                    del member[1][swap_index]
+                    del member[2][swap_index]
+            if hot_cell in member[1]:
+                # Remove this options from other bots move options
+                member[2].remove(member[2][member[1].index(hot_cell)])
+                member[1].remove(hot_cell)
+
+
+
+    print('')
+    print('red')
+    for member in reduced2:
+        print(member)
+
+    return reduced2
+
+
 
 def decide_actions(movements,recursed=False):
+    feasable_size = 1000
     print('')
     print('Entered decide actions')
 
@@ -213,14 +369,8 @@ def decide_actions(movements,recursed=False):
             print('single opt')
             for index, member in enumerate(movement_group):
                 final_movements[member[0]] = reduced[index][1][0]
-        elif num_options < 800000:
-            print('small set')
-            print('reduced = ...')
-            for member in reduced:
-                print(member)
-            top_combo = pick_optimal(reduced)
-            print('best combo')
-            print(top_combo)
+        elif num_options < feasable_size:
+            top_combo = pick_best(reduced)
             if top_combo is None:
                 return None
             for index, member in enumerate(movement_group):
@@ -228,105 +378,14 @@ def decide_actions(movements,recursed=False):
         else:
             print('large set')
             # Simplify and recurse
-
-            def reduce_system(reduced, level):
-                # Find the square with the most heat
-                cells = {}
-                for member in reduced:
-                    for cell, score in zip(member[1], member[2]):
-                        if cell in cells:
-                            cells[cell] += score
-                        else:
-                            cells[cell] = score
-
-                print('cells')
-                print(cells)
-
-                if level % 1 == 1:
-                    for purge in range(level):
-                        print('Removing hottest cell as that caused bad')
-                        print('removing key ' + str(max(cells.iteritems(), key=operator.itemgetter(1))[0]))
-                        del cells[max(cells.iteritems(), key=operator.itemgetter(1))[0]]
-                        print('cell is now...')
-                        print(cells)
-
-
-                hot_cell = max(cells.iteritems(), key=operator.itemgetter(1))[0]
-                print('hot cell')
-                print(hot_cell)
-
-                candidates = {}
-                for index, member in enumerate(reduced):
-                    if hot_cell in member[1]:
-                        score = member[2][member[1].index(hot_cell)]
-                        candidates[member[0]] = score
-
-                print('candidates')
-                print(candidates)
-
-                # If this square is the only available move for a candidate,
-                # grant it to that candidate
-                best_candidate = [x[0] for x in reduced if x[0] in candidates and len(x[1]) == 1]
-                print('candidate that NEEDS this move')
-                print(best_candidate)
-
-                # If not best candidate at this point, find the most deserving
-                if best_candidate == []:
-                    print('no necessary candidate, selecting by heat')
-
-                    if level % 1 == 0:
-                        for purge in range(level):
-                            print('Removing default candidate as that caused bad')
-                            print('removing key ' + str(max(candidates.iteritems(), key=operator.itemgetter(1))[0]))
-                            del candidates[max(candidates.iteritems(), key=operator.itemgetter(1))[0]]
-                            print('candidates are now...')
-                            print(candidates)
-
-                    best_candidate = max(candidates.iteritems(), key=operator.itemgetter(1))[0]
-                    print('best_candidate')
-                    print(best_candidate)
-
-                elif len(best_candidate) > 1:
-                    print('SHIT')
-                    return None
-                else:
-                    best_candidate = best_candidate[0]
-
-                print('orig')
-                for member in reduced:
-                    print(member)
-
-                reduced2 = reduced[:]
-                for member in reduced2:
-                    if member[0] == best_candidate:
-                        member[1] = [hot_cell]
-                        member[2] = [candidates[member[0]]]
-                    elif hot_cell in member[1]:
-                        member[2].remove(member[2][member[1].index(hot_cell)])
-                        member[1].remove(hot_cell)
-
+            reduced2 = reduce_system(reduced)
+            while num_combinations(reduced2) > feasable_size:
+                print('num combinations = ' + str(num_combinations(reduced2)))
+                reduced2 = reduce_system(reduced2)
+                print('reduced to = ' + str(num_combinations(reduced2)))
                 print('')
-                print('red')
-                for member in reduced2:
-                    print(member)
 
-                return reduced2
-
-
-            for i in range(100):
-                print('COUNT COUNTER = ' + str(i))
-                print('ASKING FOR A REDUCE')
-                reduced2 = reduce_system(reduced,i)
-                if reduced2 is not None:
-                    print('reduce worked')
-                    breakdown = decide_actions(reduced2,True)
-                    if breakdown is not None:
-                        print('solve worked')
-                        break
-                    else:
-                        print('SOLVE FAILED')
-                else:
-                    print('REDUCE FAILED')
+            breakdown = decide_actions(reduced2,True)
 
             # Recurse with simplifed system
             # breakdown = decide_actions(reduced2,True)
@@ -365,6 +424,7 @@ class Robot:
         robots = game.robots
 
         if game.turn != game_turn:
+
             game_turn = game.turn
             turn = game_turn - 1
 
@@ -395,12 +455,6 @@ class Robot:
 
         print('allocating movment for ' + str(self.location))
         move = decided_movements[self.location]
-        # print('movea')
-        # print(move)
-
-        # move = best_option(self.location, frontlinelogic)
-        # print('moveb')
-        # print(move)
 
         if move == self.location:
             return ['guard', move]
