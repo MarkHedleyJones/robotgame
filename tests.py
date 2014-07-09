@@ -208,7 +208,7 @@ def test_system(system):
     for pos, bot in system.items():
         num_opts = len(bot['options'])
         if num_opts == 0:
-            pu.db
+            #pu.db
             return False
         elif num_opts == 1 and bot['options'][0] != pos:
             try:
@@ -220,7 +220,7 @@ def test_system(system):
             if displaced_bot:
                 if len(displaced_bot_options) <= 2:
                     if set(displaced_bot_options) - set([pos, displaced_bot]) == set():
-                        pu.db
+                        #pu.db
                         return False
 
     return True
@@ -253,6 +253,14 @@ def find_possible_simplifications(system):
     #
     #
     #
+
+    # Exclude cells that no bot is occupying
+    valid_cells = system.keys()
+    hot_cell = None
+    for cell in cells.keys():
+        if cell not in valid_cells:
+            del cells[cell]
+
     hot_cell = max(cells.iteritems(), key=operator.itemgetter(1))[0]
 
     if cells[hot_cell] > 1:
@@ -366,7 +374,8 @@ def debug_sys(systemz):
         if p in b['options']:
             count += 1
     if(count == 5):
-        pu.db
+        #pu.db
+        pass
 
 def reduced_systems(system, size):
     global counter
@@ -379,7 +388,8 @@ def reduced_systems(system, size):
         # print('System has ' + str(total_combinations(system)) + ' total_combinations')
         # print('Breaking system down')
         if counter == 10:
-            pu.db
+            #pu.db
+            pass
         cells, candidates = find_possible_simplifications(system)
 
         if type(candidates) == list:
@@ -423,7 +433,7 @@ def choose_moves(system):
     top_score = -9999
     result = None
 
-    for system in reduced_systems(system, 1):
+    for system in reduced_systems(system, 100):
         o = []
         for key in system:
             o.append((key,system[key]['options'][0]))
