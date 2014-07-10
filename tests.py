@@ -143,8 +143,7 @@ system = {}
 for member in reduced:
     system[member[0]] = {'options':member[1], 'scores': member[2]}
 
-# Turn system into a dictionary
-# print(system)
+
 
 def total_combinations(system):
     total_combinations = 1
@@ -239,20 +238,6 @@ def find_possible_simplifications(system):
             else:
                 cells[cell] = 1
 
-    # print('cells')
-    # print(cells)
-    #
-    #
-    #
-    #
-    # TODO: Doing this means a non-occupied cell will always be assigned to neighbouring cells
-    # at some point so in-turn that means that we can't consider the situation
-    # where everyone stays where they are!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    #
-    #
-    #
-    #
-    #
 
     # Exclude cells that no bot is occupying
     valid_cells = system.keys()
@@ -271,30 +256,15 @@ def find_possible_simplifications(system):
                 score = bot['scores'][bot['options'].index(hot_cell)]
                 candidates[pos] = score
 
-        # print('candidates')
-        # print(candidates)
-
-        # If this square is the only available move for a candidate,
-        # grant it to that candidate
         best_candidates = [pos for pos in system if pos in candidates and len(system[pos]['options']) == 1]
-        # print('candidates that NEED this move')
-        # print(best_candidates)
 
         # If not best candidate at this point, find the most deserving
         if best_candidates == []:
-            # print('no necessary candidates, selecting by value')
-            # max_score = -9999
-            # for candidate in candidates.iteritems():
-            #     if candidate[1] > max_score:
-            #         max_score = candidate[1]
-            # # print('max score = ' + str(max_score))
 
             best_candidates = []
             for candidate in candidates.iteritems():
                 best_candidates.append(candidate[0])
-            # print('best candidates = ' + str(best_candidates))
-            # print(best_candidates)
-            # sys.exit()
+
             # Filter out candidates who would cause a bot to be left with no moves
             for candidate in best_candidates[:]:
                 for pos, bot in system.items():
@@ -456,10 +426,26 @@ def calculate_score(system, moves):
 # for bot, stuff in system.items():
 #     print(bot)
 #     print(stuff)
-a = choose_moves(system)
-print(a)
-print(calculate_score(system, a))
-print('')
-b = pick_best(system)
-print(b)
-print(calculate_score(system, b))
+# a = choose_moves(system)
+# print(a)
+# print(calculate_score(system, a))
+# print('')
+# b = pick_best(system)
+# print(b)
+# print(calculate_score(system, b))
+
+
+a = {
+    (8,9): 50,
+    (9,9): 50,
+    (4,5): 40
+}
+
+b = {
+    (9,9): 50,
+    (8,9): 50,
+    (4,5): 40
+}
+
+if a == b:
+    print('is')
