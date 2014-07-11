@@ -22,6 +22,9 @@ move_count = 0
 def adjacent( (x,y) ):
     return set([(x + dx, y + dy) for dx, dy in ((0, 1), (1, 0), (0, -1), (-1, 0))])
 
+def sourrounding( (x,y) ):
+    return set([(x + dx, y + dy) for dx, dy in ((1, -1), (-1, 1), (-1, -1), (1, 1), (0, 1), (1, 0), (0, -1), (-1, 0))])
+
 def within_bounds((x,y)):
     return x > 0 and y > 0 and x < 18 and y < 18 and (x,y) not in obstacle
 
@@ -49,9 +52,12 @@ def squares_dist(position, distance):
         return out
 
 def print_field(field):
-    for row in field:
+    for j, row in enumerate(field):
         for i, x in enumerate(row):
-            print('{0:4d}'.format(int(x))),
+            if (i,j) in obstacle:
+                print('    '),
+            else:
+                print('{0:4d}'.format(int(x))),
             if i == len(row) - 1:
                 print('')
 
@@ -286,9 +292,7 @@ def find_possible_simplifications(system):
         return (out_options, winner)
 
 
-def make_reduction(input_system, (winner, target)):
-
-    system = copy.deepcopy(input_system)
+def make_reduction(system, (winner, target)):
 
     for pos, bot in system.items():
         if pos == winner:
@@ -314,11 +318,227 @@ def make_reduction(input_system, (winner, target)):
     return system
 
 
+def print_system(system):
+    global frontlinelogic
+    field = frontlinelogic
+    x_min = 18
+    y_min = 18
+
+    x_max = 0
+    y_max = 0
+
+    for x,y in system:
+        if x < x_min:
+            x_min = x
+        if x > x_max:
+            x_max = x
+
+        if y < y_min:
+            y_min = y
+        if y > y_max:
+            y_max = y
+
+    x_min -= 1
+    x_max += 2
+    y_min -= 1
+    y_max += 2
+    # relevant_cells = list(set(flatten([adjacent(bot) for bot in system])))
+    relevant_cells = []
+    for member in system:
+        relevant_cells += system[member]['options']
+    relevant_cells = list(set(relevant_cells))
+    print('BOT Positions:')
+    print('   '),
+    for x, ax in enumerate(range(x_min,x_max)):
+        print('{0:2d}'.format(ax) + ' '),
+    print('')
+    for y, ay in enumerate(range(y_min,y_max)):
+        print('{0:2d}'.format(ay)),
+        for x, ax in enumerate(range(x_min,x_max)):
+            if (ax,ay) in system:
+                print('  X'),
+            elif (ax,ay) in relevant_cells:
+                print('  -'),
+            else:
+                print('   '),
+        print('')
+    print('')
+    print('Cell Scores:')
+    print('   '),
+    for x, ax in enumerate(range(x_min,x_max)):
+        print('{0:2d}'.format(ax) + ' '),
+    print('')
+    for y, ay in enumerate(range(y_min,y_max)):
+        print('{0:2d}'.format(ay)),
+        for x, ax in enumerate(range(x_min,x_max)):
+            if (ax,ay) in system:
+                print(' {0:2d}'.format(int(field[ay][ax]))),
+            elif (ax,ay) in relevant_cells:
+                print(' {0:2d}'.format(int(field[ay][ax]))),
+            else:
+                print('   '),
+        print('')
+
+
+def is_beneficial_move(system, (start, end)):
+    return system[start]['scores'][system[start]['options'].index(end)] > 0
+
+
+def cells_in_direction(start,direction):
+    if start[0] == direction[0]:
+        if start[1] == direction[1]:
+            raise ValueError('Start and direction are the same location')
+        # Vertical
+        if start[1] > direction[1]:
+            # Going up
+            return [start] + [(start[0], direction[1]-y) for y in range(0,direction[1])]
+        else:
+            # Going down
+            return [start] + [(start[0], y) for y in range(direction[1],18)]
+    elif start[1] == direction[1]:
+        if start[0] == direction[0]:
+            raise ValueError('Start and direction are the same location')
+        # Horizontal
+        if start[0] > direction[0]:
+            # Going left
+            return [start] + [(direction[0]-x, start[1]) for x in range(0, direction[0])]
+        else:
+            # Going right
+            return [start] + [(x, start[1]) for x in range(direction[0],18)]
+    else:
+        raise ValueError('Start and direction cells are not adjacent')
+
+
+
+def simplify_system(system):
+    global frontlinelogic
+    field = frontlinelogic
+    # Detect a bot sourrounded by friends and whos maximum move yields 0 gain
+    # and fix his position
+    bot_positions = set(system.keys())
+    print('')
+    print('')
+    print('=> BEFORE')
+    print_system(system)
+
+    # for bot in system:
+    #     if system[bot]['scores'][0] == 0:
+    #         if len(list(adjacent(bot) & bot_positions)) == 4:
+    #             make_reduction(system, (bot, bot))
+    #             print('Will hold ' + str(bot) + ' where he is...')
+    #     if len(list(sourrounding(bot) & bot_positions)) == 8:
+    #             make_reduction(system, (bot, bot))
+    #             print('Will hold ' + str(bot) + ' where he is...')
+
+
+    # Any unoccupied cell with 2 adjacent bots should be evaluated for
+    # this simplification
+
+    # If a bot, not surrounded by any friends, has only one direction that
+    # causes a gain and the square he wishes to move into is in contest with
+    # only one other bot and that bot would loose then grant to the gaining bot
+    for bot in system.keys()[:]:
+        if bot_positions & sourrounding(bot) == set():
+            # print(str(bot) + ' - ' + str(system[bot]))
+            gain_cell = [system[bot]['options'][system[bot]['scores'].index(score)] for score in system[bot]['scores'] if score > 0]
+
+            if (len(gain_cell)) == 1 and gain_cell[0] not in bot_positions:
+                # Has only one beneficail move
+                contest = cells_in_direction(bot, gain_cell[0])[2]
+                if contest in bot_positions:
+                    if gain_cell[0] in system[contest]['options']:
+                        if is_beneficial_move(system, (contest, gain_cell[0]) ) == False:
+                            print('Joinee ' + str(bot) + ' was granted ' + str(gain_cell[0]))
+                            print('He had ' + str(len(system[bot]['options'])) + 'available moves')
+                            make_reduction(system, (bot, gain_cell[0]))
+
+    print('')
+    print('-------------------------------------')
+    print('=> AFTER')
+    print_system(system)
+
+    free_system_bots = []
+    free_system_scores = []
+    free_system_coords = []
+    for bot in system.keys():
+        if len(system[bot]['options']) > 1:
+            free_system_bots.append(bot)
+            free_system_coords += system[bot]['options']
+
+    free_system_coords = list(set(free_system_coords))
+    coords_by_score = {}
+    for (x,y) in free_system_coords:
+        score = int(field[y][x])
+        free_system_scores.append(score)
+        if score in coords_by_score:
+            coords_by_score[score].append((x,y))
+        else:
+            coords_by_score[score] = [(x,y)]
+
+    free_system_scores = list(set(free_system_scores))
+    free_system_scores.sort(reverse=True)
+
+    target_system_occupied_squares = []
+    target_system_optional_squares = []
+
+    available_bots = len(free_system_bots)
+    taken = []
+    for score in free_system_scores:
+        if available_bots > 0:
+            coords = coords_by_score[score]
+            if len(coords) <= available_bots:
+                target_system_occupied_squares += coords
+            else:
+                target_system_optional_squares += coords
+            available_bots -= len(coords)
+
+
+
+    x_min = 18
+    y_min = 18
+
+    x_max = 0
+    y_max = 0
+
+    for x,y in system:
+        if x < x_min:
+            x_min = x
+        if x > x_max:
+            x_max = x
+
+        if y < y_min:
+            y_min = y
+        if y > y_max:
+            y_max = y
+
+    x_min -= 1
+    x_max += 2
+    y_min -= 1
+    y_max += 2
+    print('')
+    print('Target system:')
+    print('   '),
+    for x, ax in enumerate(range(x_min,x_max)):
+        print('{0:2d}'.format(ax) + ' '),
+    print('')
+    for y, ay in enumerate(range(y_min,y_max)):
+        print('{0:2d}'.format(ay)),
+        for x, ax in enumerate(range(x_min,x_max)):
+            if (ax,ay) in target_system_occupied_squares:
+                print('  X'),
+            elif (ax,ay) in target_system_optional_squares:
+                print('  0'),
+            else:
+                print('   '),
+        print('')
+    print('')
+
 
 
 def reduced_systems(system, size):
 
     if total_combinations(system) > size:
+
         cells, candidates = find_possible_simplifications(system)
 
         if type(candidates) == list:
@@ -344,6 +564,8 @@ def choose_moves(system):
     global feasable_size
     top_score = -9999
     result = None
+
+    simplify_system(system)
 
     for system in reduced_systems(system, feasable_size):
 
@@ -373,7 +595,9 @@ def decide_actions(movements,recursed=False):
         # Go through each member truncating their list of options
         # to end at with the first option that no other robots
         # have available to them. Remember, options are sorted by benefit.
+
         reduced = movement_group[:]
+
         for pos in range(5):
             for i in range(len(movement_group)):
                 if pos < len(movement_group[i][1]):
@@ -390,7 +614,6 @@ def decide_actions(movements,recursed=False):
         num_options = total_combinations(reduced)
 
         if num_options == 1:
-            print('single opt')
             for index, member in enumerate(movement_group):
                 final_movements[member[0]] = reduced[index][1][0]
         elif num_options < feasable_size:
@@ -400,9 +623,6 @@ def decide_actions(movements,recursed=False):
             for index, member in enumerate(movement_group):
                 final_movements[member[0]] = top_combo[index][1]
         else:
-            print('large set')
-            # Simplify and recurse
-
             system = {}
             for member in reduced:
                 system[member[0]] = {'options':member[1], 'scores': member[2]}

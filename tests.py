@@ -434,18 +434,32 @@ def calculate_score(system, moves):
 # print(b)
 # print(calculate_score(system, b))
 
+def cells_in_direction(start,direction):
+    if start[0] == direction[0]:
+        if start[1] == direction[1]:
+            raise ValueError('Start and direction are the same location')
+        # Vertical
+        if start[1] > direction[1]:
+            # Going up
+            print('going up')
+            return [start] + [(start[0], direction[1]-y) for y in range(0,direction[1])]
+        else:
+            # Going down
+            print('going down')
+            return [start] + [(start[0], y) for y in range(direction[1],18)]
+    elif start[1] == direction[1]:
+        if start[0] == direction[0]:
+            raise ValueError('Start and direction are the same location')
+        # Horizontal
+        if start[0] > direction[0]:
+            # Going left
+            print('going left')
+            return [start] + [(direction[0]-x, start[1]) for x in range(0, direction[0])]
+        else:
+            # Going right
+            print('going right')
+            return [start] + [(x, start[1]) for x in range(direction[0],18)]
+    else:
+        raise ValueError('Start and direction cells are not adjacent')
 
-a = {
-    (8,9): 50,
-    (9,9): 50,
-    (4,5): 40
-}
-
-b = {
-    (9,9): 50,
-    (8,9): 50,
-    (4,5): 40
-}
-
-if a == b:
-    print('is')
+print(cells_in_direction( (9,9), (10,9) ))
