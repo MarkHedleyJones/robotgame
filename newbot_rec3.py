@@ -347,6 +347,9 @@ def print_system(system):
     for member in system:
         relevant_cells += system[member]['options']
     relevant_cells = list(set(relevant_cells))
+    for member in system:
+        if len(system[member]['options']) == 1:
+            relevant_cells.remove(system[member]['options'][0])
     print('BOT Positions:')
     print('   '),
     for x, ax in enumerate(range(x_min,x_max)):
@@ -355,7 +358,7 @@ def print_system(system):
     for y, ay in enumerate(range(y_min,y_max)):
         print('{0:2d}'.format(ay)),
         for x, ax in enumerate(range(x_min,x_max)):
-            if (ax,ay) in system:
+            if (ax,ay) in system and len(system[(ax,ay)]['options']) > 1:
                 print('  X'),
             elif (ax,ay) in relevant_cells:
                 print('  -'),
@@ -371,7 +374,7 @@ def print_system(system):
     for y, ay in enumerate(range(y_min,y_max)):
         print('{0:2d}'.format(ay)),
         for x, ax in enumerate(range(x_min,x_max)):
-            if (ax,ay) in system:
+            if (ax,ay) in system and len(system[(ax,ay)]['options']) > 1:
                 print(' {0:2d}'.format(int(field[ay][ax]))),
             elif (ax,ay) in relevant_cells:
                 print(' {0:2d}'.format(int(field[ay][ax]))),
@@ -410,90 +413,7 @@ def cells_in_direction(start,direction):
 
 
 
-def simplify_system(system):
-    global frontlinelogic
-    field = frontlinelogic
-    # Detect a bot sourrounded by friends and whos maximum move yields 0 gain
-    # and fix his position
-    bot_positions = set(system.keys())
-    print('')
-    print('')
-    print('=> BEFORE')
-    print_system(system)
-
-    # for bot in system:
-    #     if system[bot]['scores'][0] == 0:
-    #         if len(list(adjacent(bot) & bot_positions)) == 4:
-    #             make_reduction(system, (bot, bot))
-    #             print('Will hold ' + str(bot) + ' where he is...')
-    #     if len(list(sourrounding(bot) & bot_positions)) == 8:
-    #             make_reduction(system, (bot, bot))
-    #             print('Will hold ' + str(bot) + ' where he is...')
-
-
-    # Any unoccupied cell with 2 adjacent bots should be evaluated for
-    # this simplification
-
-    # If a bot, not surrounded by any friends, has only one direction that
-    # causes a gain and the square he wishes to move into is in contest with
-    # only one other bot and that bot would loose then grant to the gaining bot
-    for bot in system.keys()[:]:
-        if bot_positions & sourrounding(bot) == set():
-            # print(str(bot) + ' - ' + str(system[bot]))
-            gain_cell = [system[bot]['options'][system[bot]['scores'].index(score)] for score in system[bot]['scores'] if score > 0]
-
-            if (len(gain_cell)) == 1 and gain_cell[0] not in bot_positions:
-                # Has only one beneficail move
-                contest = cells_in_direction(bot, gain_cell[0])[2]
-                if contest in bot_positions:
-                    if gain_cell[0] in system[contest]['options']:
-                        if is_beneficial_move(system, (contest, gain_cell[0]) ) == False:
-                            print('Joinee ' + str(bot) + ' was granted ' + str(gain_cell[0]))
-                            print('He had ' + str(len(system[bot]['options'])) + 'available moves')
-                            make_reduction(system, (bot, gain_cell[0]))
-
-    print('')
-    print('-------------------------------------')
-    print('=> AFTER')
-    print_system(system)
-
-    free_system_bots = []
-    free_system_scores = []
-    free_system_coords = []
-    for bot in system.keys():
-        if len(system[bot]['options']) > 1:
-            free_system_bots.append(bot)
-            free_system_coords += system[bot]['options']
-
-    free_system_coords = list(set(free_system_coords))
-    coords_by_score = {}
-    for (x,y) in free_system_coords:
-        score = int(field[y][x])
-        free_system_scores.append(score)
-        if score in coords_by_score:
-            coords_by_score[score].append((x,y))
-        else:
-            coords_by_score[score] = [(x,y)]
-
-    free_system_scores = list(set(free_system_scores))
-    free_system_scores.sort(reverse=True)
-
-    target_system_occupied_squares = []
-    target_system_optional_squares = []
-
-    available_bots = len(free_system_bots)
-    taken = []
-    for score in free_system_scores:
-        if available_bots > 0:
-            coords = coords_by_score[score]
-            if len(coords) <= available_bots:
-                target_system_occupied_squares += coords
-            else:
-                target_system_optional_squares += coords
-            available_bots -= len(coords)
-
-
-
+def print_target_system(system, occupied, optional):
     x_min = 18
     y_min = 18
 
@@ -524,14 +444,136 @@ def simplify_system(system):
     for y, ay in enumerate(range(y_min,y_max)):
         print('{0:2d}'.format(ay)),
         for x, ax in enumerate(range(x_min,x_max)):
-            if (ax,ay) in target_system_occupied_squares:
+            if (ax,ay) in occupied:
                 print('  X'),
-            elif (ax,ay) in target_system_optional_squares:
+            elif (ax,ay) in optional:
                 print('  0'),
             else:
                 print('   '),
         print('')
     print('')
+
+
+def simplify_system(system):
+    global frontlinelogic
+    field = frontlinelogic
+    # Detect a bot sourrounded by friends and whos maximum move yields 0 gain
+    # and fix his position
+    bot_positions = set(system.keys())
+    print('')
+    print('')
+    print('=> BEFORE')
+    print_system(system)
+
+    # for bot in system:
+    #     if system[bot]['scores'][0] == 0:
+    #         if len(list(adjacent(bot) & bot_positions)) == 4:
+    #             make_reduction(system, (bot, bot))
+    #             print('Will hold ' + str(bot) + ' where he is...')
+    #     if len(list(sourrounding(bot) & bot_positions)) == 8:
+    #             make_reduction(system, (bot, bot))
+    #             print('Will hold ' + str(bot) + ' where he is...')
+
+
+    # Any unoccupied cell with 2 adjacent bots should be evaluated for
+    # this simplification
+    changed = False
+    while changed:
+        print('Running simplification')
+        changed = False
+        for bot in system.keys():
+            if len(system[bot]['options']) > 1:
+                gain_cell = [system[bot]['options'][system[bot]['scores'].index(score)] for score in system[bot]['scores'] if score > 0]
+                if len(gain_cell) == 1:
+                    gain_cell = gain_cell[0]
+                    if gain_cell not in bot_positions:
+                        contest = cells_in_direction(bot, gain_cell)[2]
+                        if contest in bot_positions:
+                            if len(bot_positions & adjacent(gain_cell)) == 2:
+                                print('Awarded move from ' + str(bot) + ' to ' + str(gain_cell))
+                                make_reduction(system, (bot, gain_cell))
+                                changed = True
+                    elif gain_cell not in system[gain_cell]['options']:
+                        # Occupant moving out of this cell so it's available
+                        # Contestants?
+                        contestants = [coord for coord in adjacent(gain_cell) if coord in bot_positions and coord != bot]
+                        print('contestants for cell ' + str(gain_cell) + ' = ' + str(contestants))
+
+
+
+
+
+
+
+    # If a bot, not surrounded by any friends, has only one direction that
+    # causes a gain and the square he wishes to move into is in contest with
+    # only one other bot and that bot would loose then grant to the gaining bot
+    # for bot in system.keys()[:]:
+    #     if bot_positions & sourrounding(bot) == set():
+    #         # print(str(bot) + ' - ' + str(system[bot]))
+    #         gain_cell = [system[bot]['options'][system[bot]['scores'].index(score)] for score in system[bot]['scores'] if score > 0]
+
+    #         if (len(gain_cell)) == 1 and gain_cell[0] not in bot_positions:
+    #             # Has only one beneficail move
+    #             contest = cells_in_direction(bot, gain_cell[0])[2]
+    #             if contest in bot_positions:
+    #                 if gain_cell[0] in system[contest]['options']:
+    #                     if is_beneficial_move(system, (contest, gain_cell[0]) ) == False:
+    #                         print('Joinee ' + str(bot) + ' was granted ' + str(gain_cell[0]))
+    #                         print('He had ' + str(len(system[bot]['options'])) + 'available moves')
+    #                         make_reduction(system, (bot, gain_cell[0]))
+
+    print('')
+    print('-------------------------------------')
+    print('=> AFTER')
+    print_system(system)
+
+    free_system_bots = []
+    free_system_scores = []
+    free_system_coords = []
+    for bot in system.keys():
+        if len(system[bot]['options']) > 1:
+            free_system_bots.append(bot)
+            free_system_coords += system[bot]['options']
+
+    free_system_coords = list(set(free_system_coords))
+    coords_by_score = {}
+    for (x,y) in free_system_coords:
+        score = int(field[y][x])
+        free_system_scores.append(score)
+        if score in coords_by_score:
+            coords_by_score[score].append((x,y))
+        else:
+            coords_by_score[score] = [(x,y)]
+
+    free_system_scores = list(set(free_system_scores))
+    free_system_scores.sort(reverse=True)
+
+    targets_occupied = []
+    targets_optional = []
+
+    available_bots = len(free_system_bots)
+    for score in free_system_scores:
+        if available_bots > 0:
+            coords = coords_by_score[score]
+            if len(coords) <= available_bots:
+                targets_occupied += coords
+            else:
+                targets_optional += coords
+            available_bots -= len(coords)
+
+    print_target_system(system, targets_occupied, targets_optional)
+
+    # Perform translation to target system
+    if len(targets_optional) == 0:
+        good = True
+        for target in targets_occupied:
+            if target not in system.keys():
+                good = False
+                break
+        if good:
+            for bot in system:
+                make_reduction(system, (bot, bot))
 
 
 
