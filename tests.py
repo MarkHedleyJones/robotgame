@@ -5,7 +5,7 @@ import random
 import itertools
 import operator
 import copy
-import pudb
+# import pudb
 
 # def print_field(field):
 #     for row in field:
@@ -109,357 +109,361 @@ import pudb
 # a = np.array(nums)
 # print(a.mean())
 
-logicfield = [
- [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
- [  0,   0,   0,   0,   0,   0,   0,   2,   3,   4,   3,   2,   0,   0,  0,   0,   0,   0,   0,],
- [  0,   0,   0,   0,   0,   1,   2,   3,   4,   5,   4,   3,   2,   1,  0,   0,   0,   0,   0,],
- [  0,   0,   0,   0,   1,   2,   3,   4,   5,   6,   5,   4,   3,   2,  1,   0,   0,   0,   0,],
- [  0,   0,   0,   1,   2,   3,   4,   5,   6,   7,   6,   5,   4,   3,  2,   1,   0,   0,   0,],
- [  0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   7,   6,   5,   4,  3,   2,   1,   0,   0,],
- [  0,   0,   2,   3,   4,   5,   6,   7,   8,   9,   8,   7,   6,   5,  4,   3,   2,   0,   0,],
- [  0,   2,   3,   4,   5,   6,   7,   8,   9,  10,   9,   8,   7,   6,  5,   4,   3,   2,   0,],
- [  0,   3,   4,   5,   6,   7,   8,   9,  10,  11,  10,   9,   8,   7,  6,   5,   4,   3,   0,],
- [  0,   4,   5,   6,   7,   8,   9,  10,  11,  12,  11,  10,   9,   8,  7,   6,   5,   4,   0,],
- [  0,   3,   4,   5,   6,   7,   8,   9,  10,  11,  10,   9,   8,   7,  6,   5,   4,   3,   0,],
- [  0,   2,   3,   4,   5,   6,   7,   8,   9,  10,   9,   8,   7,   6,  5,   4,   3,   2,   0,],
- [  0,   0,   2,   3,   4,   5,   6,   7,   8,   9,   8,   7,   6,   5,  4,   3,   2,   0,   0,],
- [  0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   7,   6,   5,   4,  3,   2,   1,   0,   0,],
- [  0,   0,   0,   1,   2,   3,   4,   5,   6,   7,   6,   5,   4,   3,  2,   1,   0,   0,   0,],
- [  0,   0,   0,   0,   1,   2,   3,   4,   5,   6,   5,   4,   3,   2,  1,   0,   0,   0,   0,],
- [  0,   0,   0,   0,   0,   1,   2,   3,   4,   5,   4,   3,   2,   1,  0,   0,   0,   0,   0,],
- [  0,   0,   0,   0,   0,   0,   0,   2,   3,   4,   3,   2,   0,   0,  0,   0,   0,   0,   0,],
- [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,]
-]
+# logicfield = [
+#  [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+#  [  0,   0,   0,   0,   0,   0,   0,   2,   3,   4,   3,   2,   0,   0,  0,   0,   0,   0,   0,],
+#  [  0,   0,   0,   0,   0,   1,   2,   3,   4,   5,   4,   3,   2,   1,  0,   0,   0,   0,   0,],
+#  [  0,   0,   0,   0,   1,   2,   3,   4,   5,   6,   5,   4,   3,   2,  1,   0,   0,   0,   0,],
+#  [  0,   0,   0,   1,   2,   3,   4,   5,   6,   7,   6,   5,   4,   3,  2,   1,   0,   0,   0,],
+#  [  0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   7,   6,   5,   4,  3,   2,   1,   0,   0,],
+#  [  0,   0,   2,   3,   4,   5,   6,   7,   8,   9,   8,   7,   6,   5,  4,   3,   2,   0,   0,],
+#  [  0,   2,   3,   4,   5,   6,   7,   8,   9,  10,   9,   8,   7,   6,  5,   4,   3,   2,   0,],
+#  [  0,   3,   4,   5,   6,   7,   8,   9,  10,  11,  10,   9,   8,   7,  6,   5,   4,   3,   0,],
+#  [  0,   4,   5,   6,   7,   8,   9,  10,  11,  12,  11,  10,   9,   8,  7,   6,   5,   4,   0,],
+#  [  0,   3,   4,   5,   6,   7,   8,   9,  10,  11,  10,   9,   8,   7,  6,   5,   4,   3,   0,],
+#  [  0,   2,   3,   4,   5,   6,   7,   8,   9,  10,   9,   8,   7,   6,  5,   4,   3,   2,   0,],
+#  [  0,   0,   2,   3,   4,   5,   6,   7,   8,   9,   8,   7,   6,   5,  4,   3,   2,   0,   0,],
+#  [  0,   0,   1,   2,   3,   4,   5,   6,   7,   8,   7,   6,   5,   4,  3,   2,   1,   0,   0,],
+#  [  0,   0,   0,   1,   2,   3,   4,   5,   6,   7,   6,   5,   4,   3,  2,   1,   0,   0,   0,],
+#  [  0,   0,   0,   0,   1,   2,   3,   4,   5,   6,   5,   4,   3,   2,  1,   0,   0,   0,   0,],
+#  [  0,   0,   0,   0,   0,   1,   2,   3,   4,   5,   4,   3,   2,   1,  0,   0,   0,   0,   0,],
+#  [  0,   0,   0,   0,   0,   0,   0,   2,   3,   4,   3,   2,   0,   0,  0,   0,   0,   0,   0,],
+#  [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,]
+# ]
 
-reduced = [
-    [(9, 10), [(9, 9), (9, 10), (9, 11)],                   [1.0, 0.0, -1.0]],
-    [(9, 8),  [(9, 9), (9, 8), (10, 8), (8, 8), (9, 7)],    [1.0, 0.0, -1.0, -1.0, -1.0]],
-    [(9, 9),  [(9, 9), (9, 10), (8, 9), (9, 8), (10, 9)],   [0.0, -1.0, -1.0, -1.0, -1.0]],
-    [(8, 9),  [(9, 9), (8, 9), (8, 8), (8, 10), (7, 9)],    [1.0, 0.0, -1.0, -1.0, -1.0]],
-    [(10, 9), [(9, 9), (10, 9), (10, 8), (11, 9)],          [1.0, 0.0, -1.0, -1.0]]
-]
+# reduced = [
+#     [(9, 10), [(9, 9), (9, 10), (9, 11)],                   [1.0, 0.0, -1.0]],
+#     [(9, 8),  [(9, 9), (9, 8), (10, 8), (8, 8), (9, 7)],    [1.0, 0.0, -1.0, -1.0, -1.0]],
+#     [(9, 9),  [(9, 9), (9, 10), (8, 9), (9, 8), (10, 9)],   [0.0, -1.0, -1.0, -1.0, -1.0]],
+#     [(8, 9),  [(9, 9), (8, 9), (8, 8), (8, 10), (7, 9)],    [1.0, 0.0, -1.0, -1.0, -1.0]],
+#     [(10, 9), [(9, 9), (10, 9), (10, 8), (11, 9)],          [1.0, 0.0, -1.0, -1.0]]
+# ]
 
-system = {}
-for member in reduced:
-    system[member[0]] = {'options':member[1], 'scores': member[2]}
-
-
-
-def total_combinations(system):
-    total_combinations = 1
-    for pos, bot in system.items():
-        total_combinations *= len(bot['options'])
-    return total_combinations
-
-def pick_best(system):
-    top_score = -9999
-    scores = {}
-    num_system = len(system)
-    options = []
-    result = None
-
-    if type(system) == dict:
-        for pos, bot in system.items():
-            start = coord_to_cell(pos)
-            moves = [(start,coord_to_cell(end)) for end in bot['options']]
-            for index, move in enumerate(moves):
-                scores[move] = bot['scores'][index]
-            options.append(moves)
-    else:
-        for member in system:
-            start = coord_to_cell(member[0])
-            moves = [(start,coord_to_cell(end)) for end in member[1]]
-            for index, move in enumerate(moves):
-                scores[move] = member[2][index]
-            options.append(moves)
-
-    for possibility in itertools.product(*options):
-        ends = [y for x,y in possibility]
-        if len(set([y for x,y in possibility])) != num_system:
-            continue
-        if set(possibility) & set([(y,x) for x,y in possibility if x != y]):
-            continue
-
-        score = sum([scores[move] for move in possibility])
-        if score > top_score:
-            result, top_score = possibility, score
-
-    if result is None:
-        # print('')
-        # print('NO RESULT from picking best')
-        # print(system)
-        # print('')
-        # print(options)
-        return None
-    else:
-        return [(cell_to_coord(x),cell_to_coord(y)) for x,y in result]
-
-
-def coord_to_cell( coord ):
-    return coord[0] + coord[1] * 19
-
-def cell_to_coord( cell ):
-    x = cell % 19
-    y = int(cell / 19)
-    return (x,y)
-
-def test_system(system):
-    for pos, bot in system.items():
-        num_opts = len(bot['options'])
-        if num_opts == 0:
-            #pu.db
-            return False
-        elif num_opts == 1 and bot['options'][0] != pos:
-            try:
-                displaced_bot_options = system[bot['options'][0]]
-                displaced_bot = bot['options'][0]
-            except KeyError:
-                displaced_bot = None
-
-            if displaced_bot:
-                if len(displaced_bot_options) <= 2:
-                    if set(displaced_bot_options) - set([pos, displaced_bot]) == set():
-                        #pu.db
-                        return False
-
-    return True
-
-
-def find_possible_simplifications(system):
-
-    best_candidates = None
-
-    # Find the cell involved with the most moves
-    cells = {}
-    for pos, bot in system.items():
-        for cell in bot['options']:
-            if cell in cells:
-                cells[cell] += 1
-            else:
-                cells[cell] = 1
-
-
-    # Exclude cells that no bot is occupying
-    valid_cells = system.keys()
-    hot_cell = None
-    for cell in cells.keys():
-        if cell not in valid_cells:
-            del cells[cell]
-
-    hot_cell = max(cells.iteritems(), key=operator.itemgetter(1))[0]
-
-    if cells[hot_cell] > 1:
-
-        candidates = {}
-        for pos, bot in system.items():
-            if hot_cell in bot['options']:
-                score = bot['scores'][bot['options'].index(hot_cell)]
-                candidates[pos] = score
-
-        best_candidates = [pos for pos in system if pos in candidates and len(system[pos]['options']) == 1]
-
-        # If not best candidate at this point, find the most deserving
-        if best_candidates == []:
-
-            best_candidates = []
-            for candidate in candidates.iteritems():
-                best_candidates.append(candidate[0])
-
-            # Filter out candidates who would cause a bot to be left with no moves
-            for candidate in best_candidates[:]:
-                for pos, bot in system.items():
-                    if pos == hot_cell:
-                        if set(bot['options']) - set([hot_cell, candidate]) == set():
-                            # print('detected and removed bad candidate' + str(candidate))
-                            best_candidates.remove(candidate)
-
-        return (hot_cell, best_candidates)
-    else:
-        bots = {}
-        max_opts = 0
-        for pos, bot in system.items():
-            opts = len(bot['options'])
-            bots[pos] = opts
-            if opts > max_opts:
-                max_opts = opts
-
-        bots = [pos for pos,bot in system.items() if len(bot['options']) == max_opts]
-        winner = random.choice(bots)
-        return (system[winner]['options'], winner)
+# system = {}
+# for member in reduced:
+#     system[member[0]] = {'options':member[1], 'scores': member[2]}
 
 
 
+# def total_combinations(system):
+#     total_combinations = 1
+#     for pos, bot in system.items():
+#         total_combinations *= len(bot['options'])
+#     return total_combinations
+
+# def pick_best(system):
+#     top_score = -9999
+#     scores = {}
+#     num_system = len(system)
+#     options = []
+#     result = None
+
+#     if type(system) == dict:
+#         for pos, bot in system.items():
+#             start = coord_to_cell(pos)
+#             moves = [(start,coord_to_cell(end)) for end in bot['options']]
+#             for index, move in enumerate(moves):
+#                 scores[move] = bot['scores'][index]
+#             options.append(moves)
+#     else:
+#         for member in system:
+#             start = coord_to_cell(member[0])
+#             moves = [(start,coord_to_cell(end)) for end in member[1]]
+#             for index, move in enumerate(moves):
+#                 scores[move] = member[2][index]
+#             options.append(moves)
+
+#     for possibility in itertools.product(*options):
+#         ends = [y for x,y in possibility]
+#         if len(set([y for x,y in possibility])) != num_system:
+#             continue
+#         if set(possibility) & set([(y,x) for x,y in possibility if x != y]):
+#             continue
+
+#         score = sum([scores[move] for move in possibility])
+#         if score > top_score:
+#             result, top_score = possibility, score
+
+#     if result is None:
+#         # print('')
+#         # print('NO RESULT from picking best')
+#         # print(system)
+#         # print('')
+#         # print(options)
+#         return None
+#     else:
+#         return [(cell_to_coord(x),cell_to_coord(y)) for x,y in result]
 
 
-def make_reduction(input_system, (winner, target)):
+# def coord_to_cell( coord ):
+#     return coord[0] + coord[1] * 19
 
-    system = copy.deepcopy(input_system)
+# def cell_to_coord( cell ):
+#     x = cell % 19
+#     y = int(cell / 19)
+#     return (x,y)
 
-    print('')
-    print('Making a reduction')
-    print('The cell ' + str(target) + ' has been awarded to the bot in ' + str(winner))
+# def test_system(system):
+#     for pos, bot in system.items():
+#         num_opts = len(bot['options'])
+#         if num_opts == 0:
+#             #pu.db
+#             return False
+#         elif num_opts == 1 and bot['options'][0] != pos:
+#             try:
+#                 displaced_bot_options = system[bot['options'][0]]
+#                 displaced_bot = bot['options'][0]
+#             except KeyError:
+#                 displaced_bot = None
 
-    print('Original system')
-    for member in input_system.iteritems():
-        print(member)
+#             if displaced_bot:
+#                 if len(displaced_bot_options) <= 2:
+#                     if set(displaced_bot_options) - set([pos, displaced_bot]) == set():
+#                         #pu.db
+#                         return False
 
-
-    for pos, bot in system.items():
-        if pos == winner:
-            # Make this move the only option for the winner
-            bot['scores'] = [bot['scores'][bot['options'].index(target)]]
-            bot['options'] = [target]
-        else:
-            if pos == target:
-                # print('The winner, '+str(winner)+', is moving into this bots place:')
-                # print((pos,bot))
-
-                # Remove bot swap as an option for target square
-                try:
-                    swap_index = bot['options'].index(winner)
-                    # print('A swap condidion exists')
-                except:
-                    swap_index = None
-
-                if swap_index:
-                    del bot['options'][swap_index]
-                    del bot['scores'][swap_index]
-            if target in bot['options']:
-                # Remove this option from other bots move options
-                bot['scores'].remove(bot['scores'][bot['options'].index(target)])
-                bot['options'].remove(target)
-
-    print('Reduced system')
-    for member in system.iteritems():
-        print(member)
-
-    return system
-
-counter = 0
-
-def debug_sys(systemz):
-    # count stayings
-    count = 0
-    for p,b in systemz.items():
-        if p in b['options']:
-            count += 1
-    if(count == 5):
-        #pu.db
-        pass
-
-def reduced_systems(system, size):
-    global counter
-    counter += 1
-    print(counter)
-
-    if total_combinations(system) > size:
-        debug_sys(system)
-        # print('')
-        # print('System has ' + str(total_combinations(system)) + ' total_combinations')
-        # print('Breaking system down')
-        if counter == 10:
-            #pu.db
-            pass
-        cells, candidates = find_possible_simplifications(system)
-
-        if type(candidates) == list:
-            new_systems = [make_reduction(copy.deepcopy(system), (candidate, cells)) for candidate in candidates]
-        elif type(cells) == list:
-            new_systems = [make_reduction(copy.deepcopy(system), (candidates, cell)) for cell in cells]
-
-        filter(test_system, new_systems)
+#     return True
 
 
+# def find_possible_simplifications(system):
 
-        # print('After filtering there are only ' + str(len(new_systems)) + ' systems')
-        # print('')
-        # print('')
-        # print('Made a new set of simplified systems')
-        # for system in new_systems:
-        #     print(system)
-        #     print(total_combinations(system))
+#     best_candidates = None
 
-        out_systems = []
-        for tmp_sys in new_systems:
-            debug_sys(tmp_sys)
-            if total_combinations(tmp_sys) > size:
-                new_red = reduced_systems(tmp_sys, size)
-                for r in new_red:
-                    debug_sys(r)
-                    out_systems.append(r)
-                counter -= 1
-            else:
-                # print('adding')
-                out_systems.append(tmp_sys)
-        # print('returning')
-        # print(out_systems)
-        return out_systems
-    else:
-        # print('System is simple enough returning')
-        # print([system])
-        return [system]
+#     # Find the cell involved with the most moves
+#     cells = {}
+#     for pos, bot in system.items():
+#         for cell in bot['options']:
+#             if cell in cells:
+#                 cells[cell] += 1
+#             else:
+#                 cells[cell] = 1
 
-def choose_moves(system):
-    top_score = -9999
-    result = None
 
-    for system in reduced_systems(system, 100):
-        o = []
-        for key in system:
-            o.append((key,system[key]['options'][0]))
-        print('')
-        print(o)
-        best = pick_best(system)
-        score = calculate_score(system, best)
-        print(score)
-        if score > top_score:
-            result = best
-            top_score = score
-    return result
+#     # Exclude cells that no bot is occupying
+#     valid_cells = system.keys()
+#     hot_cell = None
+#     for cell in cells.keys():
+#         if cell not in valid_cells:
+#             del cells[cell]
 
-def calculate_score(system, moves):
-    out = 0.0
-    for start,end in moves:
-        out += system[start]['scores'][system[start]['options'].index(end)]
-    return out
+#     hot_cell = max(cells.iteritems(), key=operator.itemgetter(1))[0]
 
-# for bot, stuff in system.items():
-#     print(bot)
-#     print(stuff)
-# a = choose_moves(system)
-# print(a)
-# print(calculate_score(system, a))
-# print('')
-# b = pick_best(system)
-# print(b)
-# print(calculate_score(system, b))
+#     if cells[hot_cell] > 1:
 
-def cells_in_direction(start,direction):
-    if start[0] == direction[0]:
-        if start[1] == direction[1]:
-            raise ValueError('Start and direction are the same location')
-        # Vertical
-        if start[1] > direction[1]:
-            # Going up
-            print('going up')
-            return [start] + [(start[0], direction[1]-y) for y in range(0,direction[1])]
-        else:
-            # Going down
-            print('going down')
-            return [start] + [(start[0], y) for y in range(direction[1],18)]
-    elif start[1] == direction[1]:
-        if start[0] == direction[0]:
-            raise ValueError('Start and direction are the same location')
-        # Horizontal
-        if start[0] > direction[0]:
-            # Going left
-            print('going left')
-            return [start] + [(direction[0]-x, start[1]) for x in range(0, direction[0])]
-        else:
-            # Going right
-            print('going right')
-            return [start] + [(x, start[1]) for x in range(direction[0],18)]
-    else:
-        raise ValueError('Start and direction cells are not adjacent')
+#         candidates = {}
+#         for pos, bot in system.items():
+#             if hot_cell in bot['options']:
+#                 score = bot['scores'][bot['options'].index(hot_cell)]
+#                 candidates[pos] = score
 
-print(cells_in_direction( (9,9), (10,9) ))
+#         best_candidates = [pos for pos in system if pos in candidates and len(system[pos]['options']) == 1]
+
+#         # If not best candidate at this point, find the most deserving
+#         if best_candidates == []:
+
+#             best_candidates = []
+#             for candidate in candidates.iteritems():
+#                 best_candidates.append(candidate[0])
+
+#             # Filter out candidates who would cause a bot to be left with no moves
+#             for candidate in best_candidates[:]:
+#                 for pos, bot in system.items():
+#                     if pos == hot_cell:
+#                         if set(bot['options']) - set([hot_cell, candidate]) == set():
+#                             # print('detected and removed bad candidate' + str(candidate))
+#                             best_candidates.remove(candidate)
+
+#         return (hot_cell, best_candidates)
+#     else:
+#         bots = {}
+#         max_opts = 0
+#         for pos, bot in system.items():
+#             opts = len(bot['options'])
+#             bots[pos] = opts
+#             if opts > max_opts:
+#                 max_opts = opts
+
+#         bots = [pos for pos,bot in system.items() if len(bot['options']) == max_opts]
+#         winner = random.choice(bots)
+#         return (system[winner]['options'], winner)
+
+
+
+
+
+# def make_reduction(input_system, (winner, target)):
+
+#     system = copy.deepcopy(input_system)
+
+#     print('')
+#     print('Making a reduction')
+#     print('The cell ' + str(target) + ' has been awarded to the bot in ' + str(winner))
+
+#     print('Original system')
+#     for member in input_system.iteritems():
+#         print(member)
+
+
+#     for pos, bot in system.items():
+#         if pos == winner:
+#             # Make this move the only option for the winner
+#             bot['scores'] = [bot['scores'][bot['options'].index(target)]]
+#             bot['options'] = [target]
+#         else:
+#             if pos == target:
+#                 # print('The winner, '+str(winner)+', is moving into this bots place:')
+#                 # print((pos,bot))
+
+#                 # Remove bot swap as an option for target square
+#                 try:
+#                     swap_index = bot['options'].index(winner)
+#                     # print('A swap condidion exists')
+#                 except:
+#                     swap_index = None
+
+#                 if swap_index:
+#                     del bot['options'][swap_index]
+#                     del bot['scores'][swap_index]
+#             if target in bot['options']:
+#                 # Remove this option from other bots move options
+#                 bot['scores'].remove(bot['scores'][bot['options'].index(target)])
+#                 bot['options'].remove(target)
+
+#     print('Reduced system')
+#     for member in system.iteritems():
+#         print(member)
+
+#     return system
+
+# counter = 0
+
+# def debug_sys(systemz):
+#     # count stayings
+#     count = 0
+#     for p,b in systemz.items():
+#         if p in b['options']:
+#             count += 1
+#     if(count == 5):
+#         #pu.db
+#         pass
+
+# def reduced_systems(system, size):
+#     global counter
+#     counter += 1
+#     print(counter)
+
+#     if total_combinations(system) > size:
+#         debug_sys(system)
+#         # print('')
+#         # print('System has ' + str(total_combinations(system)) + ' total_combinations')
+#         # print('Breaking system down')
+#         if counter == 10:
+#             #pu.db
+#             pass
+#         cells, candidates = find_possible_simplifications(system)
+
+#         if type(candidates) == list:
+#             new_systems = [make_reduction(copy.deepcopy(system), (candidate, cells)) for candidate in candidates]
+#         elif type(cells) == list:
+#             new_systems = [make_reduction(copy.deepcopy(system), (candidates, cell)) for cell in cells]
+
+#         filter(test_system, new_systems)
+
+
+
+#         # print('After filtering there are only ' + str(len(new_systems)) + ' systems')
+#         # print('')
+#         # print('')
+#         # print('Made a new set of simplified systems')
+#         # for system in new_systems:
+#         #     print(system)
+#         #     print(total_combinations(system))
+
+#         out_systems = []
+#         for tmp_sys in new_systems:
+#             debug_sys(tmp_sys)
+#             if total_combinations(tmp_sys) > size:
+#                 new_red = reduced_systems(tmp_sys, size)
+#                 for r in new_red:
+#                     debug_sys(r)
+#                     out_systems.append(r)
+#                 counter -= 1
+#             else:
+#                 # print('adding')
+#                 out_systems.append(tmp_sys)
+#         # print('returning')
+#         # print(out_systems)
+#         return out_systems
+#     else:
+#         # print('System is simple enough returning')
+#         # print([system])
+#         return [system]
+
+# def choose_moves(system):
+#     top_score = -9999
+#     result = None
+
+#     for system in reduced_systems(system, 100):
+#         o = []
+#         for key in system:
+#             o.append((key,system[key]['options'][0]))
+#         print('')
+#         print(o)
+#         best = pick_best(system)
+#         score = calculate_score(system, best)
+#         print(score)
+#         if score > top_score:
+#             result = best
+#             top_score = score
+#     return result
+
+# def calculate_score(system, moves):
+#     out = 0.0
+#     for start,end in moves:
+#         out += system[start]['scores'][system[start]['options'].index(end)]
+#     return out
+
+# # for bot, stuff in system.items():
+# #     print(bot)
+# #     print(stuff)
+# # a = choose_moves(system)
+# # print(a)
+# # print(calculate_score(system, a))
+# # print('')
+# # b = pick_best(system)
+# # print(b)
+# # print(calculate_score(system, b))
+
+# def cells_in_direction(start,direction):
+#     if start[0] == direction[0]:
+#         if start[1] == direction[1]:
+#             raise ValueError('Start and direction are the same location')
+#         # Vertical
+#         if start[1] > direction[1]:
+#             # Going up
+#             print('going up')
+#             return [start] + [(start[0], direction[1]-y) for y in range(0,direction[1])]
+#         else:
+#             # Going down
+#             print('going down')
+#             return [start] + [(start[0], y) for y in range(direction[1],18)]
+#     elif start[1] == direction[1]:
+#         if start[0] == direction[0]:
+#             raise ValueError('Start and direction are the same location')
+#         # Horizontal
+#         if start[0] > direction[0]:
+#             # Going left
+#             print('going left')
+#             return [start] + [(direction[0]-x, start[1]) for x in range(0, direction[0])]
+#         else:
+#             # Going right
+#             print('going right')
+#             return [start] + [(x, start[1]) for x in range(direction[0],18)]
+#     else:
+#         raise ValueError('Start and direction cells are not adjacent')
+
+# print(cells_in_direction( (9,9), (10,9) ))
+
+a = [1,5,5,6,7,8]
+print(list(filter(lambda x: x != 5, a)))
+print(a)
