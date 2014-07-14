@@ -690,67 +690,36 @@ def simplify_system(system, max_options):
                         outcome['occupied'],
                         outcome['optional'],
                         outcome['num_optional'])
-    ideal_system = set(outcome['occupied'] + outcome['optional'])
-    unavailable_bots = list(set(available_bots_nieve) - set(outcome['available_bots']))
 
-    if len(list(unavailable_bots)) > 0:
-        # print('Removing unavailable_bots from the problem')
+    ideal_system = set(outcome['occupied'] + outcome['optional'])
+    detached_bots = list(set(available_bots_nieve) - set(outcome['available_bots']))
+
+    # Take the bots that couldnt make it to the system and calculate their moves
+    # separately
+    if len(detached_bots) > 0:
         sub_system = {}
-        for bot in unavailable_bots:
+        for bot in detached_bots:
             sub_system[bot] = {
                 'options': system[bot]['options'],
                 'scores': system[bot]['scores']
             }
-        # print('The system of unavailable_bots is')
-        for pos, bot in sub_system.items():
-            print(str(pos) + ' - ' + str(bot))
         sub_systems = system_split(sub_system)
-        # print('')
-        # print('This splits into ' + str(len(sub_systems)) + ' smaller systems')
         for sub_system in sub_systems:
             tmp = pick_best(sub_system)
-            # print('The optimum outcome here is')
-            # print(tmp)
             for move in tmp:
                 grant_move(system,move)
-        #         print('The system was reduced')
-
-        # print('')
-        # print('-------------------------------------')
-        # print('=> SYSTEM SPLIT REDUCTION')
-        # print_system(system)
 
 
     # Make the simplifications that push the current available bots
     # into the ideal system
     for bot in outcome['available_bots']:
-        to_remove = []
-        # Check to make sure this bot can make it into the ideal system
-        if set(system[bot]['options']) & adjacent(bot):
-            for index, option in enumerate(system[bot]['options']):
-                if option not in ideal_system:
-                    to_remove.append(option)
-            for removal in to_remove:
-                print('Removing option ' + str(removal) + ' from bot at ' + str(bot))
-                deny_move(system, (bot, removal))
-                # index = system[bot]['options'].index(removal)
-                # del system[bot]['scores'][index]
-                # del system[bot]['options'][index]
+        if set(system[bot]['options']) & ideal_system:
+            move_removals = list(set(system[bot]['options']) - ideal_system)
+            for move_removal in move_removals:
+                deny_move(system, (bot, move_removal))
         else:
-            print('Bot ' + str(bot) + ' cant make it into the ideal system')
-            # This bot can't make it into the ideal system
+            raise UserWarning('Bot ' + str(bot) + ' cant make it to the sub_system')
 
-    # Make sure any bots with only one move aren't contesed by others
-    # for bot in outcome['available_bots']:
-    #     if len(system[bot]['options']) == 1:
-    #         move = system[bot]['options'][0]
-    #         for b in outcome['available_bots']:
-    #             if b != bot and move in system[b]['options']:
-    #                 index = system[b]['options'].index(move)
-    #                 del system[b]['scores'][index]
-    #                 del system[b]['options'][index]
-
-    # consolodate(system)
 
     print('')
     print('-------------------------------------')
@@ -758,37 +727,42 @@ def simplify_system(system, max_options):
     print_system(system,
                  justbots=outcome['available_bots'],
                  occupied=outcome['occupied'],
-                 optional=outcome['optional'])
+                 optional=outcome['optional'],
+                 scores=True)
 
-
-    # print('Current System')
-    # for a,b in system.items():
-    #     print(str(a) + ' - ' + str(b))
     print('The system now has a total of ' + str(total_combinations(system)) + ' optins')
+
     # Bots that didn't partake in the grand simplification
     unavailable_bots = list(set(system.keys()) - set(outcome['available_bots']))
     free_unavailable = [bot for bot in unavailable_bots if len(system[bot]['options']) > 1]
 
-    if len(free_unavailable) == 0:
-        remaining_score = 0
-        for bot in unavailable_bots:
-            x,y = system[bot]['options'][0]
-            remaining_score += field[y][x]
-        score_absolute_max = remaining_score + outcome['max_score']
-        outcome['score_absolute_max'] = score_absolute_max
-        print('The initial system score was ' + str(score_absolute_initial))
-        print('The maximum obtainable for the system is ' + str(score_absolute_max))
-        score_gain_required = score_absolute_max - score_absolute_initial
-        print('The score gain were looking for is ' + str(score_gain_required))
-        outcome['score_gain_required'] = score_gain_required
-    else:
+    if len(free_unavailable) != 0:
         raise UserWarning('Some unavailable_bots arent frozen')
+
+    # Calculate the score contribution from the non-sub_system bots
+    remaining_score = 0
+    for bot in unavailable_bots:
+        x,y = system[bot]['options'][0]
+        remaining_score += int(field[y][x])
+    score_absolute_max = remaining_score + outcome['max_score']
+
+    outcome['score_absolute_max'] = score_absolute_max
+
+
+    print('The initial system score was ' + str(score_absolute_initial))
+    print('The maximum obtainable for the system is ' + str(score_absolute_max))
+    score_gain_required = score_absolute_max - score_absolute_initial
+    print('The score gain were looking for is ' + str(score_gain_required))
+    outcome['score_gain_required'] = score_gain_required
+
+
 
     bots_in_optional = [bot for bot in outcome['available_bots'] if bot in outcome['optional']]
     bots_in_optional_moving_to_occupied = [bot for bot in bots_in_optional if len(system[bot]['options']) == 1 and system[bot]['options'][0] in outcome['occupied']]
 
     bots_outside_system = [bot for bot in outcome['available_bots'] if bot not in outcome['optional'] and bot not in outcome['occupied']]
-    bots_outside_system_moving_to_optional = [bot for bot in bots_outside_system if len(system[bot]['options']) == 1 and system[bot]['options'][0] in outcome['optional']]
+    bots_outside_system_moving_to_optional = [bot for bot in bots_outside_system if len(set(system[bot]['options']) & set(outcome['optional'])) == len(system[bot]['options'])]
+    bots_outside_system_moving_to_occupied = [bot for bot in bots_outside_system if len(set(system[bot]['options']) & set(outcome['occupied'])) == len(system[bot]['options'])]
 
     bots_in_occupied = [bot for bot in outcome['available_bots'] if bot in outcome['occupied']]
     bots_in_occupied_moving_to_optional = [bot for bot in bots_in_occupied if len(system[bot]['options']) == 1 and system[bot]['options'][0] in outcome['optional']]
@@ -797,11 +771,31 @@ def simplify_system(system, max_options):
     num_target_bots_in_optional = outcome['num_optional']
     num_target_bots_in_occupied = len(outcome['occupied'])
 
-    current_bots_in_optional = bots_in_optional + bots_outside_system_moving_to_optional
+    current_bots_in_optional = bots_in_optional + bots_outside_system_moving_to_optional + bots_in_occupied_moving_to_optional
     current_bots_in_optional = filter(lambda x: x not in bots_in_optional_moving_to_occupied, current_bots_in_optional)
-    current_bots_in_occupied = bots_in_occupied + bots_in_optional_moving_to_occupied
+    current_bots_in_optional_that_can_move_to_occupied = [bot for bot in current_bots_in_optional if set(system[bot]['options']) & set(outcome['occupied'])]
+
+
+    current_bots_in_occupied = bots_in_occupied + bots_in_optional_moving_to_occupied + bots_outside_system_moving_to_occupied
     current_bots_in_occupied = filter(lambda x: x not in bots_in_occupied_moving_to_optional, current_bots_in_occupied)
-    current_bots_outside = filter(lambda x: x not in bots_outside_system_moving_to_optional, bots_outside_system)
+    current_bots_in_occupied_that_can_move_to_optional = [bot for bot in current_bots_in_occupied if set(system[bot]['options']) & set(outcome['optional'])]
+
+    squares_that_will_be_occupied = [system[bot]['options'][0] for bot in system.keys() if len(system[bot]['options']) == 1]
+    target_occupied_with_bot_now_or_definite_bot_next = list(set(squares_that_will_be_occupied) & set(outcome['occupied']))
+    target_occupied_with_bot_now_or_definite_bot_next += current_bots_in_occupied
+    target_occupied_not_occupied = list(set(outcome['occupied']) - set(target_occupied_with_bot_now_or_definite_bot_next))
+
+    current_bots_outside = filter(lambda x: x not in bots_outside_system_moving_to_optional and x not in bots_outside_system_moving_to_occupied, bots_outside_system)
+
+    min_possible_num_bots_in_optional = len(set(current_bots_in_optional) - set(current_bots_in_optional_that_can_move_to_occupied))
+    # Is this one even a thing?
+    # max_num_bots_in_optional = set(current_bots_in_optional) + set(current_bots_in_occupied_that_can_move_to_optional)
+
+    if min_possible_num_bots_in_optional > outcome['num_optional']:
+        diff = outcome['num_optional'] - min_possible_num_bots_in_optional
+        print('ALERT! - There ' + str(diff) + ' bots too many that will have to stay in optional squares')
+        print('Occupied squares that need someone assigned are')
+        print(target_occupied_not_occupied)
 
     try_freeze = False
 
@@ -833,6 +827,7 @@ def simplify_system(system, max_options):
 
             if num_bots_to_move_into_occupied > 0:
                 print('And ' + str(num_bots_to_move_into_occupied) + ' bots need to move into occupied')
+                # 1
             elif num_bots_to_move_into_occupied < 0:
                 print('And ' + str(-num_bots_to_move_into_occupied) + ' bots need to move out of occupied')
             else:
@@ -846,131 +841,11 @@ def simplify_system(system, max_options):
             elif num_bots_to_move_into_occupied < 0:
                 print('And ' + str(-num_bots_to_move_into_occupied) + ' bots need to move out of occupied')
             else:
+                unoccupied_occupied = [square for square in outcome['occupied'] if square not in current_bots_in_occupied]
+                print('unoccupied_occupied')
+                print(unoccupied_occupied)
                 # TODO: Find a way to locate unoccupied (occupied) squares before attemping a freeze
                 # Also, freeze is saying a valid solution is returned when freezing wouldnt generate a valid solution
-
-                # -------------------------- running turn 28 ---------------------------
-
-
-                # => INITIAL
-                # BOT Positions:
-                # 14 participants
-                #      7   8   9  10  11  12  13  14
-                #  6           -
-                #  7           X   -
-                #  8   -   X   X   X   -
-                #  9   -   X   X   X   X   X   X
-                # 10   -   X   X   X   -   -   -
-                # 11       -   X   -
-                # 12           -
-
-
-                # -------------------------------------
-                # => AFTER DANGLING GRANTS
-                # BOT Positions:
-                # 14 participants
-                #      7   8   9  10  11  12  13  14
-                #  6           -
-                #  7           X   -
-                #  8   -   X   X   X   -
-                #  9   -   X   X   X   X   X   X
-                # 10   -   X   X   X   -   -   -
-                # 11       -   X   -
-                # 12           -
-
-
-                # -------------------------------------
-                # TARGET system:
-                # 14 participants
-                # ()
-                #      7   8   9  10  11  12  13  14
-                #  6           1
-                #  7           X   1
-                #  8   1   X   X   X   1
-                #  9   X   X   X   X   X   1
-                # 10   1   X   X   X   1
-                # 11       1   X   1
-                # 12           1
-
-                # Removing option (13, 9) from bot at (13, 9)
-                # Removing option (13, 10) from bot at (13, 9)
-                # Removing option (12, 10) from bot at (12, 9)
-
-                # -------------------------------------
-                # => SYSTEM PUSHED TOWARDS IDEAL
-                # BOT Positions:
-                # 14 participants
-                #      7   8   9  10  11  12  13  14
-                #  6           -
-                #  7           0   -
-                #  8   -   0   0   0   -
-                #  9   =   0   0   0   0   ?   X
-                # 10   -   0   0   0   -
-                # 11       -   0   -
-                # 12           -
-
-                # The system now has a total of 75000000 optins
-                # The initial system score was 143
-                # The maximum obtainable for the system is 145
-                # The score gain were looking for is 2
-                # Optional squares exist
-                # No bots need to leave optional
-                # 13
-                # And no bots need to move into occupied, will try to freeze
-
-                # System result = ...
-                # The system has a total of 75000000 options
-                # (10, 8) - {'options': [(9, 8), (10, 9), (10, 8), (11, 8), (10, 7)], 'scores': [1, 1, 0, -1, -1]}
-                # (10, 10) - {'options': [(9, 10), (10, 9), (10, 10), (11, 10), (10, 11)], 'scores': [1, 1, 0, -1, -1]}
-                # (9, 8) - {'options': [(9, 9), (9, 8), (10, 8), (8, 8), (9, 7)], 'scores': [1, 0, -1, -1, -1]}
-                # (11, 9) - {'options': [(10, 9), (11, 8), (11, 10)], 'scores': [1, -1, -1]}
-                # (9, 9) - {'options': [(9, 9), (9, 10), (8, 9), (9, 8), (10, 9)], 'scores': [0, -1, -1, -1, -1]}
-                # (8, 10) - {'options': [(9, 10), (8, 9), (8, 10), (8, 11), (7, 10)], 'scores': [1, 1, 0, -1, -1]}
-                # (9, 10) - {'options': [(9, 9), (9, 10), (9, 11), (8, 10), (10, 10)], 'scores': [1, 0, -1, -1, -1]}
-                # (8, 8) - {'options': [(8, 9), (9, 8), (8, 8), (7, 8)], 'scores': [1, 1, 0, -1]}
-                # (13, 9) - {'options': [(12, 9)], 'scores': [1]}
-                # (9, 11) - {'options': [(9, 10), (9, 11), (8, 11), (10, 11), (9, 12)], 'scores': [1, 0, -1, -1, -1]}
-                # (8, 9) - {'options': [(9, 9), (8, 9), (8, 8), (8, 10), (7, 9)], 'scores': [1, 0, -1, -1, -1]}
-                # (12, 9) - {'options': [(11, 9)], 'scores': [1]}
-                # (10, 9) - {'options': [(9, 9), (10, 9), (10, 8), (10, 10)], 'scores': [1, 0, -1, -1]}
-                # (9, 7) - {'options': [(9, 8), (9, 7), (10, 7), (9, 6)], 'scores': [1, 0, -1, -1]}
-
-
-
-                # bots_in_optional = [(12, 9)]
-                # bots_in_optional_moving_to_occupied = [(12, 9)]
-                # bots_outside_system = [(13, 9)]
-                # bots_outside_system_moving_to_optional  = [(13, 9)]
-                # bots_in_occupied = [(10, 8), (10, 10), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (10, 9), (9, 7)]
-                # bots_in_occupied_moving_to_optional = []
-
-                # num_target_bots_in_optional = 1
-                # num_target_bots_in_occupied = 13
-                # current_bots_in_optional = [(13, 9)]
-                # current_bots_in_occupied = [(10, 8), (10, 10), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (10, 9), (9, 7), (12, 9)]
-
-                # Testing a bot freeze situation
-                # Returning a valid solution
-                # It took  3.950000ms for simplify_system to complete
-                # possible bots to move = [(11, 9)]
-                # filtered = [(11, 9)]
-                # solve_system returned NONE
-                # Traceback (most recent call last):
-                #   File "/usr/lib/python2.7/site-packages/rgkit/game.py", line 65, in _get_action
-                #     action = self._robot.act(game_info)
-                #   File "<string>", line 1480, in act
-                #   File "<string>", line 1436, in decide_actions
-                # TypeError: 'NoneType' object is not iterable
-                # Traceback (most recent call last):
-                #   File "/usr/lib/python2.7/site-packages/rgkit/game.py", line 65, in _get_action
-                #     action = self._robot.act(game_info)
-                #   File "<string>", line 1482, in act
-                # KeyError: (9, 14)
-                # Traceback (most recent call last):
-                #   File "/usr/lib/python2.7/site-packages/rgkit/game.py", line 65, in _get_action
-                #     action = self._robot.act(game_info)
-                #   File "<string>", line 1482, in act
-                # KeyError: (12, 9)
                 # -------------------------- running turn 29 ---------------------------
                 print('And no bots need to move into occupied, will try to freeze')
                 try_freeze = True
@@ -991,15 +866,20 @@ def simplify_system(system, max_options):
     print('bots_outside_system_moving_to_optional  = ' + str(bots_outside_system_moving_to_optional))
     print('bots_in_occupied = ' + str(bots_in_occupied))
     print('bots_in_occupied_moving_to_optional = ' + str(bots_in_occupied_moving_to_optional))
-    print('')
+
     print('num_target_bots_in_optional = ' + str(num_target_bots_in_optional))
     print('num_target_bots_in_occupied = ' + str(num_target_bots_in_occupied))
     print('current_bots_in_optional = ' + str(current_bots_in_optional))
+    print('current_bots_in_optional_that_can_move_to_occupied = ' + str(current_bots_in_optional_that_can_move_to_occupied))
     print('current_bots_in_occupied = ' + str(current_bots_in_occupied))
+    print('current_bots_in_occupied_that_can_move_to_optional = ' + str(current_bots_in_occupied_that_can_move_to_optional))
+    print('current_bots_outside = ' + str(current_bots_outside))
+    print('target_occupied_not_occupied = ' + str(target_occupied_not_occupied))
+    print('target_occupied_with_bot_now_or_definite_bot_next = ' + str(target_occupied_with_bot_now_or_definite_bot_next))
     print('')
 
-    if try_freeze:
-        attempt_freeze(system)
+    # if try_freeze:
+    #     attempt_freeze(system)
 
     # if num_target_bots_in_optional == 0:
     #     # We need to get all bots into occupied squares
@@ -1311,12 +1191,22 @@ def freeze(system, score_absolute_initial, score_absolute_max):
 
 
 def is_valid(system):
-    return [b for b in system if len(system[b]['options']) == 0] == []
+    return len([b for b in system if system[b]['options'] == []]) == 0
+
 
 def is_settled(system):
     return len([b for b in system if len(system[b]['options']) == 1]) == len(system.keys())
 
-def bot_to_move(system):
+
+# 'occupied': targets_occupied,
+# 'optional': targets_optional,
+# 'num_optional': num_optional,
+# 'available_bots': available_bots,
+# 'max_score': max_score
+# outcome['current_bots_in_occupied'] = current_bots_in_occupied
+# outcome['current_bots_outside'] = current_bots_outside
+# outcome['current_bots_in_optional'] = current_bots_in_optional
+def bot_to_move(system, outcome):
     # Are there bots that need to move?
     boi = [bot for bot in system if len(system[bot]['options']) > 1]
     print('possible bots to move = ' + str(boi))
@@ -1324,17 +1214,68 @@ def bot_to_move(system):
     print('filtered = ' + str(boi))
 
     if boi == []:
+        # num_target_bots_in_optional = outcome['num_optional']
+        # num_target_bots_in_occupied = len(outcome['occupied'])
+        # if len(outcome['current_bots_outside']) > 0:
+        #     for bot in outcome['current_bots_outside']:
+        #         if bot in system[bot]['options']:
+        #             raise UserWarning('Bots need to come in but ' + str(bot) + ' outside staying still!')
+
+        # if num_target_bots_in_optional == 0:
+        #     print('No optional squares exist so bots should just be packing into occupied squares')
+        # else:
+        #     print('Optional squares exist')
+
+        #     num_bots_to_move_into_optional = num_target_bots_in_optional - len(outcome['current_bots_in_optional'])
+        #     num_bots_to_move_into_occupied = num_target_bots_in_occupied - len(outcome['current_bots_in_occupied'])
+
+        #     if num_bots_to_move_into_optional > 0:
+        #         print(str(num_bots_to_move_into_optional) + ' bots need to move into optional')
+
+        #         if num_bots_to_move_into_occupied > 0:
+        #             print('And ' + str(num_bots_to_move_into_occupied) + ' bots need to move into occupied')
+        #         elif num_bots_to_move_into_occupied < 0:
+        #             print('And ' + str(-num_bots_to_move_into_occupied) + ' bots need to move out of occupied')
+        #         else:
+        #             print('But no bots need to move into occupied')
+
+        #     elif num_bots_to_move_into_optional < 0:
+        #         print(str(-num_bots_to_move_into_optional) + ' bots need to move out of optional')
+
+        #         if num_bots_to_move_into_occupied > 0:
+        #             print('And ' + str(num_bots_to_move_into_occupied) + ' bots need to move into occupied')
+        #         elif num_bots_to_move_into_occupied < 0:
+        #             print('And ' + str(-num_bots_to_move_into_occupied) + ' bots need to move out of occupied')
+        #         else:
+        #             print('But no bots need to move into occupied')
+
+        #     else:
+        #         print('No bots need to leave optional')
+        #         print(num_target_bots_in_occupied)
+        #         if num_bots_to_move_into_occupied > 0:
+        #             print('And ' + str(num_bots_to_move_into_occupied) + ' bots need to move into occupied')
+        #         elif num_bots_to_move_into_occupied < 0:
+        #             print('And ' + str(-num_bots_to_move_into_occupied) + ' bots need to move out of occupied')
+        #         else:
+        #             unoccupied_occupied = [square for square in outcome['occupied'] if square not in outcome['current_bots_in_occupied']]
+        #             print('unoccupied_occupied')
+        #             print(unoccupied_occupied)
+        #             # TODO: Find a way to locate unoccupied (occupied) squares before attemping a freeze
+        #             # Also, freeze is saying a valid solution is returned when freezing wouldnt generate a valid solution
+        #             # -------------------------- running turn 29 ---------------------------
+        #             print('And no bots need to move into occupied, will try to freeze')
+        print('No bots that need to move could be found')
         return None
     else:
         return random.choice(boi)
 
 
-def system_walk(system, max_gain=False):
+def system_walk(system, outcome):
     # print('Entered system walk with')
     # for a in system:
         # print(str(a) + ' - ' + str(system[a]))
     if is_settled(system) == False:
-        btm = bot_to_move(system)
+        btm = bot_to_move(system, outcome)
         if btm:
             # print('Will move ' + str(btm))
             subsys = [grant_move(copy.deepcopy(system), (btm, move), True) for move in system[btm]['options']]
@@ -1347,17 +1288,17 @@ def system_walk(system, max_gain=False):
                 # print(sys)
                 if is_settled(sys):
                     # print('(SETTLED)')
-                    if max_gain != False and system_score_relative(sys) == max_gain:
+                    if 'score_gain_required' in outcome and system_score_relative(sys) == outcome['score_gain_required']:
                         print('And is max gain - returning this system')
                         return [sys]
                     else:
                         out.append(sys)
                 else:
                     # print('(RECURSING...)')
-                    test = system_walk(sys, max_gain)
-                    if max_gain != False:
+                    test = system_walk(sys, outcome)
+                    if 'score_gain_required' in outcome:
                         for tmp_sys in test:
-                            if system_score_relative(tmp_sys) == max_gain:
+                            if system_score_relative(tmp_sys) == outcome['score_gain_required']:
                                 print('Top solution detected - avalanching down')
                                 return [tmp_sys]
                     else:
@@ -1366,23 +1307,32 @@ def system_walk(system, max_gain=False):
         else:
             # print('No bots to move - attempt a freeze')
             if attempt_freeze(system) == False:
+                print('attempt_freeze faield')
                 best = pick_best(system,max_gain)
                 for move in best:
+                    print('granditing move ' + str(move))
                     grant_move(system, move)
             else:
-                if max_gain != False and system_score_relative(system) == max_gain:
-                    print('A system with max gain has been found!')
+                if 'score_gain_required' in outcome:
+                    if system_score_relative(system) == outcome['score_gain_required']:
+                        print('A system with max gain has been found!')
+                    else:
+                        print('The found system doesnt have the max_gain')
+                        print(system_score_relative(system))
+                        print(outcome['score_gain_required'])
+                        for a in system:
+                            print(str(a) + ' - ' + str(system[a]))
             return [system]
     else:
         # print('system_walk - system is settled, returning')
         return [system]
 
 
-def solve_system(system, target_score_relative=False):
+def solve_system(system, outcome):
     top_score = -9999
     result = None
-    possibilities = system_walk(system, target_score_relative)
-    if target_score_relative == False:
+    possibilities = system_walk(system, outcome)
+    if 'score_gain_required' not in outcome:
         for possibility in possibilities:
             # print('Checking possibility')
             if system_score_relative(possibility) > top_score:
@@ -1395,7 +1345,7 @@ def solve_system(system, target_score_relative=False):
                 print('Stink solution')
     else:
         for possibility in possibilities:
-            if system_score_relative(possibility) == target_score_relative:
+            if system_score_relative(possibility) == outcome['score_gain_required']:
                 print('checking')
                 print(possibility)
                 # print('Found a winner!!!!!!!!!!!!!!')
@@ -1444,7 +1394,7 @@ def choose_moves(system):
         print('The system only has one possibility so returning early')
         return system
     else:
-        out = solve_system(system, target_gain)
+        out = solve_system(system, outcome)
         if out != None:
             print('solve_system returned - choose moves will return')
             for a in out:
