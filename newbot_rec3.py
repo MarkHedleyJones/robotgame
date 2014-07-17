@@ -257,7 +257,7 @@ def consolodate(system):
         consolodate(system)
 
 
-def grant_move(system, (winner, target), return_system=False):
+def grant_move(system, winner, target, return_system=False):
     set_option(system, winner, target)
     consolodate(system)
     if return_system:
@@ -508,7 +508,7 @@ def grant_dangling_move(system):
         gain_move = single_gain_move(system, bot)
         if gain_move:
             if available_for_move_by(system, bot, gain_move):
-                grant_move(system, (bot, gain_move))
+                grant_move(system, bot, gain_move)
                 changed = True
                 print('Awarded move for ' + str(bot)),
                 print(' to ' + str(gain_move))
@@ -701,9 +701,8 @@ def flaten_pathnest(element, level):
     out = []
     if type(element) == list:
         level += 1
-        if len(element) > 1:
-            for item in element:
-                out += flaten_pathnest(item, level)
+        for item in element:
+            out += flaten_pathnest(item, level)
         return out
     else:
         level -= 1
@@ -716,6 +715,8 @@ def find_paths(start, end, available):
     the given start and end points
     """
     path_nest = shortest_paths(start, end, available)
+    if path_nest is None:
+        return []
     flat_nest = flaten_pathnest(path_nest[0],0)
     paths = []
     tmp = []
@@ -769,9 +770,13 @@ def check_moves(system, move_paths):
         for start in range(len(moves)-1):
             end = start + 1
             try:
-                grant_move(tmp_sys, (moves[start], moves[end]))
+                print('Move ' + str((moves[start], moves[end])))
+                grant_move(tmp_sys, moves[start], moves[end])
             except ValueError:
-                print('Referenced non-available move')
+                print('Referenced non-available move ' + str((moves[start], moves[end])))
+                return False
+            except KeyError:
+                print('Attempted to move non-existant bot ' + str((moves[start], moves[end])))
                 return False
     valid = is_valid(tmp_sys)
     if valid:
@@ -782,55 +787,186 @@ def check_moves(system, move_paths):
         return False
 
 def make_moves(system, move_paths):
+    print('making moves ' + str(move_paths))
+    print('system =')
+    for a in system:
+        print(str(a) + ' - ' + str(system[a]))
     for moves in move_paths:
         for start in range(len(moves)-1):
             end = start + 1
-            grant_move(system, (moves[start], moves[end]))
+            grant_move(system, moves[start], moves[end])
+    print('done')
+    print('system is now =')
+    for a in system:
+        print(str(a) + ' - ' + str(system[a]))
+
+
+# def try_movement_sets(system, targets, candidates, squares):
+#     potential_outcomes = []
+#     for to_coord in targets:
+#         tmp_outcomes = []
+#         for from_coord in candidates:
+#             print('From ' + str(from_coord) + ' to ' + str(to_coord))
+#             out = find_paths(from_coord, to_coord, squares + [to_coord])
+#             print(str(len(out)) + ' different ways')
+#             if out != []:
+#                 tmp_outcomes.append(out)
+#                 print(out)
+#             else:
+#                 print('No found paths between points')
+#         potential_outcomes.append(tmp_outcomes)
+#     potential_outcomes.sort(key=lambda x: len(x[0]))
+#     move_paths = []
+#     for a in potential_outcomes:
+#         move_paths.append(flatten(a))
+#     combos = itertools.product(*move_paths)
+#     invalids = []
+#     found = False
+#     print('Will start filtering and trying combinations')
+#     for combo in combos:
+#         flat_combo = list(flatten(combo))
+#         if len(set(flat_combo)) == len(flat_combo):
+#             found = True
+#             print('Valid combo length = ' + str(len(combo)) + ' (checking) = ' + str(combo))
+#             if check_moves(system, combo):
+#                 print('Found a way of moving the bots around...')
+#                 print(combo)
+#                 make_moves(system, combo)
+#                 return True
+#             else:
+#                 print('The bots couldnt move like this')
+#                 print(combo)
+#         else:
+#             print('Combo invalid as muli-path collision - ' + str(combo))
+#             invalids.append(combo)
+#     if found == False:
+#         print('No valid combos found, list follows')
+#         for z in invalids:
+#             print(z)
+#     return False
+
+def mixer(xs, ys):
+    """
+    Take two lists of equal size and return their combinations where no
+    elements are repeated
+    """
+    out = []
+    length = len(xs)
+    a = [(a,b) for a in xs for b in ys]
+    z = []
+    for start in [x * length for x in range(length)]:
+        z.append(a[start:start+length])
+    for combo in itertools.product(*z):
+        used = [x[1] for x in combo]
+        if len(set(used)) == len(used):
+            out.append([x for x in combo])
+    return out
+
+def mix_lists(xs, ys):
+    """
+    Take two lists, each of any length, and return their combinations where
+    no elements are repeated
+    """
+    out = []
+    if len(xs) < len(ys):
+        for _ys_ in itertools.combinations(ys, len(xs)):
+            out += mixer(xs, _ys_)
+    elif len(xs) > len(ys):
+        for _xs_ in itertools.combinations(xs, len(ys)):
+            out += mixer(_xs_, ys)
+    else:
+        out = mixer(xs, ys)
+    return out
 
 
 def try_movement_sets(system, targets, candidates, squares):
-    potential_outcomes = []
-    for to_coord in targets:
-        tmp_outcomes = []
-        for from_coord in candidates:
-            print('From ' + str(from_coord) + ' to ' + str(to_coord))
-            out = find_paths(from_coord, to_coord, squares + [to_coord])
-            print(str(len(out)) + ' different ways')
-            if out != []:
-                tmp_outcomes.append(out)
-                print(out)
+    match_sets = mix_lists(candidates, targets)
+    print('Match sets generated = ' + str(match_sets))
+    available_coords = set(squares)
+    for match_set in match_sets:
+        print('')
+        print('Looking at ' + str(match_set))
+        set_paths = []
+        skip = False
+        taken_coords = set()
+        for start, end in match_set:
+            coords = copy.deepcopy(available_coords)
+            coords.add(end)
+            coords.difference(taken_coords)
+            print('Find paths between ' + str(start) + ' and ' + str(end))
+            paths = find_paths(start, end, list(coords))
+            print(str(len(paths)) + ' paths = ' + str(paths))
+            if paths == None:
+                skip = True
+                break
             else:
-                print('No found paths between points')
-        potential_outcomes.append(tmp_outcomes)
-    potential_outcomes.sort(key=lambda x: len(x[0]))
-    move_paths = []
-    for a in potential_outcomes:
-        move_paths.append(flatten(a))
-    combos = itertools.product(*move_paths)
-    invalids = []
-    found = False
-    print('Will start filtering and trying combinations')
-    for combo in combos:
-        flat_combo = list(flatten(combo))
-        if len(set(flat_combo)) == len(flat_combo):
-            found = True
-            print('Valid combo length = ' + str(len(combo)) + ' (checking) = ' + str(combo))
-            if check_moves(system, combo):
-                print('Found a way of moving the bots around...')
-                print(combo)
-                make_moves(system, combo)
-                return True
-            else:
-                print('The bots couldnt move like this')
-                print(combo)
+                set_paths.append(paths)
+
+        print('Finished generating path sets')
+        print(set_paths)
+        print('')
+
+        if skip == False:
+            print('Checking match_set, ' + str(match_set))
+            print('Which generated the set_paths ' + str(set_paths))
+
+            for path_group in itertools.product(*set_paths):
+                print('Checking ' + str(path_group))
+                if check_moves(system, path_group):
+                    print('Looking good, implementing set')
+                    make_moves(system, path_group)
+                    print('after returning, systemm is now =')
+                    for a in system:
+                        print(str(a) + ' - ' + str(system[a]))
+                    return True
+            print('Tried all moves but none worked')
         else:
-            print('Combo invalid as muli-path collision - ' + str(combo))
-            invalids.append(combo)
-    if found == False:
-        print('No valid combos found, list follows')
-        for z in invalids:
-            print(z)
+            print('Skipped as no paths')
+
+    print('Fell out of loop without a solution')
     return False
+
+# def try_movement_sets(system, targets, candidates, squares):
+#     match_sets = mix_lists(candidates, targets)
+#     print('Match sets generated = ' + str(match_sets))
+#     available_coords = set(squares)
+#     for match_set in match_sets:
+#         print('Looking at ' + str(match_set))
+#         set_paths = []
+#         skip = False
+#         taken_coords = set()
+#         for start, end in match_set:
+#             coords = available_coords
+#             coords.add(end)
+#             coords.difference(taken_coords)
+#             print('')
+#             print('Find paths between ' + str(start) + ' and ' + str(end))
+#             print('Using only ' + str(list(coords)))
+#             paths = find_paths(start, end, list(coords))
+#             if paths == None:
+#                 skip = True
+#                 break
+#             else:
+#                 set_paths.append(paths)
+#         if skip == False:
+#             print('Checking match_set, ' + str(match_set))
+#             print('Which generated the set_paths ' + str(set_paths))
+
+#             for set_path in set_paths:
+#                 print('Checking ' + str(set_path))
+#                 if check_moves(system, set_path):
+#                     print('Looking good, implementing set')
+#                     make_moves(system, set_path)
+#                     print('after returning, systemm is now =')
+#                     for a in system:
+#                         print(str(a) + ' - ' + str(system[a]))
+#                     return True
+#             print('Tried all moves but none worked')
+#         else:
+#             print('Skipped as no paths')
+
+#     print('Fell out of loop without a solution')
+#     return False
 
 
 def simplify_system(system, max_options):
@@ -893,8 +1029,8 @@ def simplify_system(system, max_options):
         sub_systems = system_split(sub_system)
         for sub_system in sub_systems:
             tmp = pick_best(sub_system)
-            for move in tmp:
-                grant_move(system,move)
+            for start, end in tmp:
+                grant_move(system, start, end)
 
 
     # Make the simplifications that push the current available bots
@@ -1069,7 +1205,7 @@ def simplify_system(system, max_options):
                         if try_movement_sets(system,
                                              target_occupied_not_occupied,
                                              current_bots_in_optional_that_can_move_to_occupied + movable_bots_in_occupied_that_have_to_move,
-                                             outcome['available_bots']):
+                                             movable_bots_in_occupied):
                             print('The movements were made')
                         else:
                             print('The movements could not be made')
@@ -1080,7 +1216,7 @@ def simplify_system(system, max_options):
                     if try_movement_sets(system,
                                          target_occupied_not_occupied,
                                          current_bots_in_optional_that_can_move_to_occupied + movable_bots_in_occupied_that_have_to_move,
-                                         outcome['available_bots']):
+                                         movable_bots_in_occupied):
                         print('The movements were made')
                     else:
                         print('The movements could not be made')
@@ -1096,45 +1232,53 @@ def simplify_system(system, max_options):
         # to have it as a catch all.
         if len(target_occupied_not_occupied) > 0:
             print('unoccupied squares exist ... ' + str(target_occupied_not_occupied))
-            if len(target_occupied_not_occupied) == len(movable_bots_in_occupied_that_have_to_move):
-                print(str(len(target_occupied_not_occupied)) + ' bots need to shuffle')
-                if try_movement_sets(system,
-                                     target_occupied_not_occupied,
-                                     movable_bots_in_occupied_that_have_to_move,
-                                     outcome['available_bots']):
-                    print('It worked')
-                else:
-                    print('It failed')
+            print('We need to find paths between those and ' + str(len(target_occupied_not_occupied)) + ' bots')
+            source_bots = movable_bots_in_occupied_that_have_to_move + current_bots_in_optional_that_can_move_to_occupied
+            print('There are ' + str(len(source_bots)) + ' bots that can be used... ' + str(source_bots))
+            if try_movement_sets(system,
+                                 target_occupied_not_occupied,
+                                 source_bots,
+                                 movable_bots_in_occupied):
+                print('It worked')
             else:
-                print('But bots in occupied need to shuffle but not sure how many')
+                print('It failed')
 
-            # print('No bots need to leave optional')
-            # print(num_target_bots_in_occupied)
-            # if num_bots_to_move_into_occupied > 0:
-            #     print('And ' + str(num_bots_to_move_into_occupied) + ' bots need to move into occupied')
-            #     if len(unoccupied_occupied) > 0:
-            #         if len(unoccupied_occupied) == len(movable_bots_in_occupied_that_have_to_move):
-            #             print(str(len(unoccupied_occupied)) + ' bots need to shuffle')
+            # if len(source_bots) > 0:
+            #     if len(source_bots) == len(target_occupied_not_occupied):
+            #         print('There are as may targets as source bots')
+            #         if try_movement_sets(system,
+            #                              target_occupied_not_occupied,
+            #                              source_bots,
+            #                              outcome['available_bots']):
+            #             print('It worked')
+            #         else:
+            #             print('It failed')
+            #     elif len(source_bots) < len(target_occupied_not_occupied):
+            #         print('There are only ' + str(len(source_bots)) + ' source_bots and ' + str(len(target_occupied_not_occupied)) + ' targets')
+            #         match_combos = itertools.permutations(target_occupied_not_occupied, len(source_bots))
+            #         for combo in match_combos:
+            #             print('trying target_occupied_not_occupied = ' + str(combo))
             #             if try_movement_sets(system,
-            #                                  target_occupied_not_occupied,
-            #                                  movable_bots_in_occupied_that_have_to_move,
+            #                                  combo,
+            #                                  source_bots,
             #                                  outcome['available_bots']):
             #                 print('It worked')
             #             else:
             #                 print('It failed')
-            #         else:
-            #             print('But bots in occupied need to shuffle but not sure how many')
-            # elif num_bots_to_move_into_occupied < 0:
-            #     print('And ' + str(-num_bots_to_move_into_occupied) + ' bots need to move out of occupied')
-            # else:
-            #     unoccupied_occupied = [square for square in outcome['occupied'] if square not in current_bots_in_occupied]
-            #     print('unoccupied_occupied')
-            #     print(unoccupied_occupied)
-            #     # TODO: Find a way to locate unoccupied (occupied) squares before attemping a freeze
-            #     # Also, freeze is saying a valid solution is returned when freezing wouldnt generate a valid solution
-            #     # -------------------------- running turn 29 ---------------------------
-            #     print('And no bots need to move into occupied, will try to freeze')
-            #     try_freeze = True
+            #     else:
+            #         print('There are ' + str(len(source_bots)) + ' source_bots but only ' + str(len(target_occupied_not_occupied)) + ' targets')
+            #         match_combos = itertools.permutations(source_bots, len(target_occupied_not_occupied))
+            #         for combo in match_combos:
+            #             print('trying source_bots = ' + str(combo))
+            #             if try_movement_sets(system,
+            #                                  target_occupied_not_occupied,
+            #                                  combo,
+            #                                  outcome['available_bots']):
+            #                 print('It worked')
+            #             else:
+            #                 print('It failed')
+
+
 
     print('')
     print('System result = ...')
@@ -1190,7 +1334,7 @@ def freeze(system, score_absolute_initial, score_absolute_max):
     test_sys = copy.deepcopy(system)
     for bot in test_sys:
         if len(test_sys[bot]['options']) > 1 and bot in test_sys[bot]['options']:
-            grant_move(test_sys, (bot, bot))
+            grant_move(test_sys, bot, bot)
     print('Did this generate a solution?')
 
     moves = []
@@ -1212,7 +1356,7 @@ def freeze(system, score_absolute_initial, score_absolute_max):
             print('Will apply this to the real system')
             for bot in system:
                 if len(system[bot]['options']) > 1 and bot in system[bot]['options']:
-                    grant_move(system, (bot, bot))
+                    grant_move(system, bot, bot)
 
 
 
@@ -1326,14 +1470,13 @@ def is_valid(system):
     consolodate(system)
 
     if len([b for b in system if system[b]['options'] == []]) > 0:
-        print('System failed because a bot has no moves')
+        # print('System failed because a bot has no moves')
         return False
 
     taken_moves = [system[bot]['options'][0] for bot in system if len(system[bot]['options']) == 1]
     if len(taken_moves) != len(set(taken_moves)):
-        print('System failed because two bots take the same coordinate')
+        # print('System failed because two bots take the same coordinate')
         return False
-
 
     return True
 
@@ -1353,9 +1496,9 @@ def is_settled(system):
 def bot_to_move(system, outcome):
     # Are there bots that need to move?
     boi = [bot for bot in system if len(system[bot]['options']) > 1]
-    print('possible bots to move = ' + str(boi))
+    # print('possible bots to move = ' + str(boi))
     boi = filter(lambda x: x not in system[x]['options'], boi)
-    print('filtered = ' + str(boi))
+    # print('filtered = ' + str(boi))
 
     if boi == []:
         # num_target_bots_in_optional = outcome['num_optional']
@@ -1408,7 +1551,7 @@ def bot_to_move(system, outcome):
         #             # Also, freeze is saying a valid solution is returned when freezing wouldnt generate a valid solution
         #             # -------------------------- running turn 29 ---------------------------
         #             print('And no bots need to move into occupied, will try to freeze')
-        print('No bots that need to move could be found')
+        # print('No bots that need to move could be found')
         return None
     else:
         return random.choice(boi)
@@ -1421,11 +1564,11 @@ def system_walk(system, outcome):
     if is_settled(system) == False:
         btm = bot_to_move(system, outcome)
         if btm:
-            print('Will move ' + str(btm))
-            subsys = [grant_move(copy.deepcopy(system), (btm, move), True) for move in system[btm]['options']]
+            # print('Will move ' + str(btm))
+            subsys = [grant_move(copy.deepcopy(system), btm, move, True) for move in system[btm]['options']]
             pre_num = len(subsys)
             subsys = filter(is_valid, subsys)
-            print(str(pre_num - len(subsys)) + ' systems were filtered as they were not valid')
+            # print(str(pre_num - len(subsys)) + ' systems were filtered as they were not valid')
 
             out = []
             for sys in subsys:
@@ -1433,7 +1576,7 @@ def system_walk(system, outcome):
                 if is_settled(sys):
                     # print('(SETTLED)')
                     if 'score_gain_required' in outcome and system_score_relative(sys) == outcome['score_gain_required']:
-                        print('And is max gain - returning this system')
+                        # print('And is max gain - returning this system')
                         return [sys]
                     else:
                         out.append(sys)
@@ -1443,7 +1586,7 @@ def system_walk(system, outcome):
                     if 'score_gain_required' in outcome:
                         for tmp_sys in test:
                             if system_score_relative(tmp_sys) == outcome['score_gain_required']:
-                                print('Top solution detected - avalanching down')
+                                # print('Top solution detected - avalanching down')
                                 return [tmp_sys]
                     else:
                         out += test
@@ -1455,9 +1598,9 @@ def system_walk(system, outcome):
                 if attempt_freeze(system) == False:
                     print('attempt_freeze faield')
                     best = pick_best(system,max_gain)
-                    for move in best:
+                    for move_from, move_to in best:
                         print('granting move ' + str(move))
-                        grant_move(system, move)
+                        grant_move(system, move_from, move_to)
                 else:
                     if 'score_gain_required' in outcome:
                         if system_score_relative(system) == outcome['score_gain_required']:
@@ -1550,13 +1693,12 @@ def choose_moves(system):
     sys_backup = copy.deepcopy(system)
     outcome = simplify_system(system, feasable_size)
     tc('simplify_system')
-    target_gain = False
-    if 'score_gain_required' in outcome:
-        target_gain = outcome['score_gain_required']
     if total_combinations(system) == 1:
         print('The system only has one possibility so returning early')
         return system
     else:
+        print('Will try freezing the system')
+        attempt_freeze(system)
         out = solve_system(system, outcome)
         if out != None:
             print('solve_system returned - choose moves will return')
