@@ -6,6 +6,48 @@ import operator
 import copy
 # import pudb
 
+spawn = {(7,1),(8,1),(9,1),(10,1),(11,1),(5,2),(6,2),(12,2),(13,2),(3,3),(4,3),(14,3),(15,3),(3,4),(15,4),(2,5),(16,5),(2,6),(16,6),(1,7),(17,7),(1,8),(17,8),(1,9),(17,9),(1,10),(17,10),(1,11),(17,11),(2,12),(16,12),(2,13),(16,13),(3,14),(15,14),(3,15),(4,15),(14,15),(15,15),(5,16),(6,16),(12,16),(13,16),(7,17),(8,17),(9,17),(10,17),(11,17)}
+obstacle = {(0,0),(1,0),(2,0),(3,0),(4,0),(5,0),(6,0),(7,0),(8,0),(9,0),(10,0),(11,0),(12,0),(13,0),(14,0),(15,0),(16,0),(17,0),(18,0),(0,1),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(12,1),(13,1),(14,1),(15,1),(16,1),(17,1),(18,1),(0,2),(1,2),(2,2),(3,2),(4,2),(14,2),(15,2),(16,2),(17,2),(18,2),(0,3),(1,3),(2,3),(16,3),(17,3),(18,3),(0,4),(1,4),(2,4),(16,4),(17,4),(18,4),(0,5),(1,5),(17,5),(18,5),(0,6),(1,6),(17,6),(18,6),(0,7),(18,7),(0,8),(18,8),(0,9),(18,9),(0,10),(18,10),(0,11),(18,11),(0,12),(1,12),(17,12),(18,12),(0,13),(1,13),(17,13),(18,13),(0,14),(1,14),(2,14),(16,14),(17,14),(18,14),(0,15),(1,15),(2,15),(16,15),(17,15),(18,15),(0,16),(1,16),(2,16),(3,16),(4,16),(14,16),(15,16),(16,16),(17,16),(18,16),(0,17),(1,17),(2,17),(3,17),(4,17),(5,17),(6,17),(12,17),(13,17),(14,17),(15,17),(16,17),(17,17),(18,17),(0,18),(1,18),(2,18),(3,18),(4,18),(5,18),(6,18),(7,18),(8,18),(9,18),(10,18),(11,18),(12,18),(13,18),(14,18),(15,18),(16,18),(17,18),(18,18)}
+move_count = 0
+
+
+def newfield():
+    return [
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
+     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,]]
+
+
+def print_field(field):
+    print('   '),
+    for x, ax in enumerate(range(19)):
+        print('{0:2d}'.format(ax) + ' '),
+    print('')
+    for y, ay in enumerate(range(19)):
+        print('{0:2d} '.format(ay)),
+        for x, ax in enumerate(range(19)):
+            if (ax, ay) in obstacle:
+                print('   '),
+            else:
+                print('{0:2d} '.format(int(field[ay][ax]))),
+        print('')
+
 def squares_dist(position, distance):
     if distance == 0:
         return [position]
@@ -128,13 +170,8 @@ def find_paths(start, end, available):
     Return a list of the shortest possible paths between
     the given start and end points
     """
-    print('')
-    print("THIS IS FIND_PATHS")
-    print('from ' + str(start) + ' to ' + str(end) + ' with ' + str(available))
     path_nest = shortest_paths(start, end, available)
-    print(path_nest)
     flat_nest = flaten_pathnest(path_nest[0],0)
-    print(flat_nest)
     paths = []
     tmp = []
     last_level = 0
@@ -349,151 +386,86 @@ movable_bots_in_occupied_that_have_to_move = []
 
 outcome['available_bots'] = [(10, 8), (6, 9), (11, 7), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (7, 9), (10, 9), (9, 7)]
 
-if try_movement_sets(system,
-                     target_occupied_not_occupied,
-                     current_bots_in_optional_that_can_move_to_occupied + movable_bots_in_occupied_that_have_to_move,
-                     outcome['available_bots']):
-    print('The movements were made')
-else:
-    print('The movements could not be made')
 
-# -------------------------- running turn 28 ---------------------------
-
-
-# => INITIAL
-# BOT Positions:
-# 14 participants
-#      5   6   7   8   9  10  11  12
-#  6                   -
-#  7               -   X   -   X
-#  8           -   X   X   X   -
-#  9   -   X   X   X   X   X   X
-# 10           -   X   X   -   -
-# 11               -   X   -
-# 12
+def cells_inside_radius_from_centre(radius):
+    if radius == 0:
+        return []
+    else:
+        out = []
+        for rad in range(radius):
+            out += squares_dist((9, 9), rad)
+        return out
 
 
-# -------------------------------------
-# => AFTER DANGLING GRANTS
-# BOT Positions:
-# 14 participants
-#      5   6   7   8   9  10  11  12
-#  6                   -
-#  7               -   X   -   X
-#  8           -   X   X   X   -
-#  9   -   X   X   X   X   X   X
-# 10           -   X   X   -   -
-# 11               -   X   -
-# 12
-
-# determine_ideal_outcome called with [(10, 8), (6, 9), (11, 7), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (7, 9), (10, 9), (9, 7)]
-# outcome =
-# num_optional - 1
-# optional - [(6, 9), (10, 11), (11, 10), (10, 7), (7, 10), (8, 11), (8, 7), (9, 6), (11, 8), (7, 8)]
-# occupied - [(9, 9), (9, 8), (8, 9), (10, 9), (9, 10), (10, 8), (8, 10), (9, 11), (9, 7), (11, 9), (7, 9), (10, 10), (8, 8)]
-# available_bots - [(10, 8), (6, 9), (11, 7), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (7, 9), (10, 9), (9, 7)]
-# levels - {8: [(5, 9), (11, 7)], 9: [(6, 9), (10, 11), (11, 10), (10, 7), (7, 10), (8, 11), (8, 7), (9, 6), (11, 8), (7, 8)], 10: [(10, 8), (8, 10), (9, 11), (9, 7), (11, 9), (7, 9), (10, 10), (8, 8)], 11: [(9, 8), (8, 9), (10, 9), (9, 10)], 12: [(9, 9)]}
-# max_score - 145
-
-# -------------------------------------
-# TARGET system:
-# 14 participants
-# ()
-#      5   6   7   8   9  10  11  12
-#  6                   1
-#  7               1   X   1
-#  8           1   X   X   X   1
-#  9       1   X   X   X   X   X
-# 10           1   X   X   X   1
-# 11               1   X   1
-# 12
+def num_cells_inside_radius_from_centre(radius):
+    return sum([1] + [x*4 for x in range(radius+1)])
 
 
-# -------------------------------------
-# => SYSTEM PUSHED TOWARDS IDEAL
-# BOT Positions:
-# 14 participants
-#      5   6   7   8   9  10  11  12
-#  6                   -
-#  7               -   0   -   X
-#  8           -   0   0   0   -
-#  9       ?   0   0   0   0   0
-# 10           -   0   0   =   -
-# 11               -   0   -
-# 12
+def num_cells_at_radius_from_centre(radius):
+    num = radius * 4
+    if num > 0:
+        return num
+    else:
+        return 1
 
-# Cell Scores:
-#      5   6   7   8   9  10  11  12
-#  6                   9
-#  7               9  10   9   8
-#  8           9  10  11  10   9
-#  9       9  10  11  12  11  10
-# 10           9  10  11  10   9
-# 11               9  10   9
-# 12
 
-# The system now has a total of 500000000 options
-# The initial system score was 143
-# The maximum obtainable for the system is 145
-# The score gain were looking for is 2
-# The system_score_gain_required = 2
 
-# bots_in_optional = [(6, 9)]
-# bots_in_optional_moving_to_occupied = []
-# bots_outside_system = [(11, 7)]
-# bots_outside_system_moving_to_optional  = [(11, 7)]
-# bots_in_occupied = [(10, 8), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (7, 9), (10, 9), (9, 7)]
-# bots_in_occupied_moving_to_optional = []
-# movable_bots_in_occupied_that_have_to_move = []
-# num_target_bots_in_optional = 1
-# num_target_bots_in_occupied = 13
-# current_bots_in_optional = [(6, 9), (11, 7)]
-# current_bots_in_optional_that_can_move_to_occupied = [(6, 9)]
-# current_bots_in_occupied = [(10, 8), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (7, 9), (10, 9), (9, 7)]
-# current_bots_in_occupied_that_can_move_to_optional = [(10, 8), (11, 9), (8, 10), (8, 8), (9, 11), (7, 9), (9, 7)]
-# current_bots_outside = []
-# target_occupied_not_occupied = [(10, 10)]
-# target_occupied_with_bot_now_or_definite_bot_next = [(10, 8), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (7, 9), (10, 9), (9, 7)]
 
-# Optional squares exist
-# 1 bots need to move out of optional
-# And 1 bots need to move into occupied
-# len(current_bots_in_optional_that_can_move_to_occupied) = 1
-# Deficit = 0
-# It should be possible to make this happen
-# Like by doing one from 1 of the following solutions
-# Match sets generated = [[((6, 9), (10, 10))]]
-# Looking at [((6, 9), (10, 10))]
+def squares_dist(position, distance):
+    if distance == 0:
+        return [position]
+    else:
+        out = []
+        px = position[0]
+        py = position[1]
+        for x in range(distance):
+            y = distance - x
+            out += [(px+x, py+y), (px+y, py-x), (px-x, py-y), (px-y, py+x)]
+        return out
 
-# Find paths between (6, 9) and (10, 10)
-# Using only [(10, 8), (6, 9), (11, 7), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (9, 7), (10, 10), (10, 9), (7, 9)]
-# Checking match_set, [((6, 9), (10, 10))]
-# Which generated the set_paths [[[(6, 9), (7, 9), (8, 9), (8, 8), (9, 9), (9, 10), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 8), (10, 9), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 10), (9, 10), (10, 10)]]]
-# Checking [[(6, 9), (7, 9), (8, 9), (8, 8), (9, 9), (9, 10), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 8), (10, 9), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 10), (9, 10), (10, 10)]]
-# Move ((6, 9), (7, 9))
-# Move ((7, 9), (8, 9))
-# Move ((8, 9), (8, 8))
-# Move ((8, 8), (9, 9))
-# Referenced non-available move ((8, 8), (9, 9))
-# Tried all moves but none worked
-# Fell out of loop without a solution
-# The movements could not be made
-# unoccupied squares exist ... [(10, 10)]
-# We need to find paths between those and 1 bots
-# There are 1 bots that can be used... [(6, 9)]
-# Match sets generated = [[((6, 9), (10, 10))]]
-# Looking at [((6, 9), (10, 10))]
 
-# Find paths between (6, 9) and (10, 10)
-# Using only [(10, 8), (6, 9), (11, 7), (9, 8), (11, 9), (9, 9), (8, 10), (9, 10), (8, 8), (9, 11), (8, 9), (9, 7), (10, 10), (10, 9), (7, 9)]
-# Checking match_set, [((6, 9), (10, 10))]
-# Which generated the set_paths [[[(6, 9), (7, 9), (8, 9), (8, 8), (9, 9), (9, 10), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 8), (10, 9), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 10), (9, 10), (10, 10)]]]
-# Checking [[(6, 9), (7, 9), (8, 9), (8, 8), (9, 9), (9, 10), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 8), (10, 9), (10, 10)], [(6, 9), (7, 9), (8, 9), (8, 10), (9, 10), (10, 10)]]
-# Move ((6, 9), (7, 9))
-# Move ((7, 9), (8, 9))
-# Move ((8, 9), (8, 8))
-# Move ((8, 8), (9, 9))
-# Referenced non-available move ((8, 8), (9, 9))
-# Tried all moves but none worked
-# Fell out of loop without a solution
-# It failed
+def within_bounds(coord):
+    x, y = coord
+    return x > 0 and y > 0 and x < 18 and y < 18 and (x, y) not in obstacle
+
+
+def max_front_radius(members):
+    max_radius = 0
+    for radius in range(13):
+        cells_at_radius = squares_dist((9, 9), radius)
+        cells_inner_layer = []
+        if radius > 0:
+            cells_inner_layer = squares_dist((9, 9), radius - 1)
+        cells_outer_layer = squares_dist((9, 9), radius + 1)
+        num_cells_at_radius = num_cells_at_radius_from_centre(radius)
+        participant_cells = cells_at_radius + cells_inner_layer + cells_outer_layer
+        participant_bots = [bot for bot in participant_cells if bot in members]
+        if len(participant_bots) >= num_cells_at_radius:
+            max_radius = radius
+    return max_radius
+
+
+
+def level4_field(radius, max_points=13, step=1, width=2):
+    out = newfield()
+    from_rad = 0
+    for distance in range(0, 13):
+        score = 0
+        if distance > radius:
+            from_rad = distance - radius
+            score = max_points - (from_rad * step)
+        else:
+            if distance > (radius - width):
+                score = max_points
+            else:
+                score = max_points - (radius - width + 1 - distance) * step
+        print('radius = ' + str(radius) + ' distance = ' + str(distance) + ', from_rad = ' + str(from_rad))
+        for x, y in squares_dist((9, 9), distance):
+            if within_bounds((x, y)):
+                out[y][x] = score
+    return out
+
+
+for i in range(8):
+    frontlinelogic = level4_field(i, max_points=50, step=2, width=3)
+    print_field(frontlinelogic)
