@@ -142,25 +142,25 @@ def group_by_interferrence(movements):
     return movement_groups
 
 
-def movelist_sorted(bot, moves, gains):
-    moves = [(x[0], x[1]) for x in zip(moves, gains)]
+def movelist_sorted(bot, options, gains):
+    moves = [(x[0], x[1]) for x in zip(options, gains)]
     moves.sort(key=lambda x: x[1], reverse=True)
     return [bot, [x[0] for x in moves], [x[1] for x in moves]]
-
-
-def product(*args):
-    pools = map(tuple, args)
-    result = [[]]
-    for pool in pools:
-        result = [x+[y] for x in result for y in pool if y not in x]
-    for prod in result:
-        yield tuple(prod)
-
-
-def movement_gains(bot_action, field):
-    coord_from = bot_action[0]
-    moves = bot_action[1]
-    return [(fieldval(coord_to, field) - fieldval(coord_from, field)) for coord_to in moves]
+#
+#
+#def product(*args):
+#    pools = map(tuple, args)
+#    result = [[]]
+#    for pool in pools:
+#        result = [x+[y] for x in result for y in pool if y not in x]
+#    for prod in result:
+#        yield tuple(prod)
+#
+#
+#def movement_gains(bot_action, field):
+#    coord_from = bot_action[0]
+#    moves = bot_action[1]
+#    return [(fieldval(coord_to, field) - fieldval(coord_from, field)) for coord_to in moves]
 
 
 def total_combinations(system):
@@ -183,20 +183,12 @@ def pick_best(system, max_score=False):
     options = []
     result = None
 
-    if type(system) == dict:
-        for pos, bot in system.items():
-            start = coord_to_cell(pos)
-            moves = [(start, coord_to_cell(end)) for end in bot['options']]
-            for index, move in enumerate(moves):
-                scores[move] = bot['scores'][index]
-            options.append(moves)
-    else:
-        for member in system:
-            start = coord_to_cell(member[0])
-            moves = [(start, coord_to_cell(end)) for end in member[1]]
-            for index, move in enumerate(moves):
-                scores[move] = member[2][index]
-            options.append(moves)
+    for pos, bot in system.items():
+        start = coord_to_cell(pos)
+        moves = [(start, coord_to_cell(end)) for end in bot['options']]
+        for index, move in enumerate(moves):
+            scores[move] = bot['scores'][index]
+        options.append(moves)
 
     for possibility in itertools.product(*options):
         ends = [y for x, y in possibility]
@@ -229,7 +221,6 @@ def cell_to_coord(cell):
     x = cell % 19
     y = int(cell / 19)
     return (x, y)
-
 
 
 def remove_option(system, bot, option):
@@ -611,7 +602,7 @@ def grant_dangling_move(system):
     return changed
 
 
-def system_split(input_system):
+def split_sys(input_system):
 
     system = copy.deepcopy(input_system)
 
@@ -993,7 +984,7 @@ def try_movement_sets(system, targets, candidates, squares):
     print('The temp system has TOO MAYNY combinations to solve straight')
     print(total_combinations(tmp_system))
 
-    subsystems = system_split(tmp_system)
+    subsystems = split_sys(tmp_system)
     print('Can be split into ' + str(len(subsystems)) + ' subsystems')
 
     # TODO: This is being split so that we can separate target-candidate
@@ -1192,15 +1183,31 @@ def system_details(system, outcome, score_absolute_initial, field):
 
 
 
+def reduce_sys(system):
+    reduced = False
+    #((a, b), [moves], [scores]),
+    for index in range(5):
+        for bot in system.keys():
+            if index < len(system[bot]['options']):
+                test_move = system[bot]['options'][index]
+                contest = False
+                for contestant in [x for x in system.keys() if x != bot]:
+                    if test_move in system[contestant]['options']:
+                        contest = True
+                        break
+                if contest == False:
+                    system[bot]['options'] = system[bot]['options'][:index+1]
+                    system[bot]['scores'] = system[bot]['scores'][:index+1]
+                    reduced = True
+    return reduced
 
 
-def simplify_system(system, debug=False):
+def simplify_sys(system, field, debug=False):
     changed = False
+    reduce_sys(system)
 
     global feasable_size
-    global frontlinelogic
 
-    field = frontlinelogic
     score_absolute_initial = 0
     for x, y in system:
         score_absolute_initial += fieldval((x, y), field)
@@ -1225,7 +1232,7 @@ def simplify_system(system, debug=False):
         print_system(system)
 
 
-    systems = system_split(system)
+    systems = split_sys(system)
 
     if len(systems) > 1:
         if debug:
@@ -1255,7 +1262,7 @@ def simplify_system(system, debug=False):
                     print('A subsystem...')
                     print('has ' + str(len(subsys)) + ' members')
                     print(str(total_combinations(subsys)) + ' combinations')
-                simplify_system(subsys)
+                simplify_sys(subsys, field)
                 if debug:
                     print('simplified...')
                     print(str(total_combinations(subsys)) + ' combinations')
@@ -1338,7 +1345,7 @@ def simplify_system(system, debug=False):
                 'options': system[bot]['options'],
                 'scores': system[bot]['scores']
             }
-        sub_systems = system_split(sub_system)
+        sub_systems = split_sys(sub_system)
         for sub_system in sub_systems:
             tmp = pick_best(sub_system)
             for start, end in tmp:
@@ -1527,7 +1534,7 @@ def simplify_system(system, debug=False):
     if changed:
         if debug:
             print('The system changed while in simplyfy, running system through simplyfy_system again')
-        return simplify_system(system, True)
+        return simplify_sys(system, field, True)
     else:
         if debug:
             print('The system did not change in simplify system, returning')
@@ -1551,35 +1558,35 @@ def attempt_freeze(system):
 
 
 
-def freeze(system, score_absolute_initial, score_absolute_max):
-    # If we fixed everyones position that has options, how close do we get?
-    print('Testing a bot freeze situation')
-    test_sys = copy.deepcopy(system)
-    for bot in test_sys:
-        if len(test_sys[bot]['options']) > 1 and bot in test_sys[bot]['options']:
-            grant_move(test_sys, bot, bot)
-    print('Did this generate a solution?')
-
-    moves = []
-    for bot in test_sys:
-        if len(test_sys[bot]['options']) == 1:
-            moves.append((bot, test_sys[bot]['options'][0]))
-        else:
-            moves = False
-            break
-
-    if moves == False:
-        raise UserWarning('Invalid system on freeze')
-    else:
-        print('Yes it did')
-        score_diff = calculate_relative_score(test_sys, moves)
-        frozen_score = score_absolute_initial + score_diff
-        print('The frozen system now has a score of ' + str(frozen_score))
-        if frozen_score == score_absolute_max:
-            print('Will apply this to the real system')
-            for bot in system:
-                if len(system[bot]['options']) > 1 and bot in system[bot]['options']:
-                    grant_move(system, bot, bot)
+#def freeze(system, score_absolute_initial, score_absolute_max):
+#    # If we fixed everyones position that has options, how close do we get?
+#    print('Testing a bot freeze situation')
+#    test_sys = copy.deepcopy(system)
+#    for bot in test_sys:
+#        if len(test_sys[bot]['options']) > 1 and bot in test_sys[bot]['options']:
+#            grant_move(test_sys, bot, bot)
+#    print('Did this generate a solution?')
+#
+#    moves = []
+#    for bot in test_sys:
+#        if len(test_sys[bot]['options']) == 1:
+#            moves.append((bot, test_sys[bot]['options'][0]))
+#        else:
+#            moves = False
+#            break
+#
+#    if moves == False:
+#        raise UserWarning('Invalid system on freeze')
+#    else:
+#        print('Yes it did')
+#        score_diff = calculate_relative_score(test_sys, moves)
+#        frozen_score = score_absolute_initial + score_diff
+#        print('The frozen system now has a score of ' + str(frozen_score))
+#        if frozen_score == score_absolute_max:
+#            print('Will apply this to the real system')
+#            for bot in system:
+#                if len(system[bot]['options']) > 1 and bot in system[bot]['options']:
+#                    grant_move(system, bot, bot)
 
 
 
@@ -1676,58 +1683,6 @@ def system_walk(system, outcome):
         return [system]
 
 
-def solve_system(system, outcome):
-    top_score = -9999
-    result = None
-    possibilities = system_walk(system, outcome)
-    if possibilities == []:
-        print('SYSTEM WALK FAILED SO RUN A FULL SOULTION')
-        make_moves(system, pick_best(system))
-        return True
-        # return pick_best(system)
-    if 'score_gain_required' not in outcome:
-        for possibility in possibilities:
-            print('Checking possibility')
-            if system_score_relative(possibility) > top_score:
-                print('New highest possibility = ')
-                # for a in possibility:
-                    # print(a)
-                result = possibility
-                top_score = system_score_relative(possibility)
-            else:
-                print('Stink solution')
-        return result
-    else:
-        print('system walk returned ' + str(len(possibilities)) + ' possibilities')
-        for possibility in possibilities:
-            if is_valid(possibility):
-                print('checking possibility for score of ' + str(outcome['score_gain_required']))
-                this_score = system_score_relative(possibility)
-                print('this possibility has a score of ' + str(this_score))
-                if system_score_relative(possibility) == outcome['score_gain_required']:
-                    print('checking')
-                    print(possibility)
-                    print('Found a winner!!!!!!!!!!!!!!')
-                    return possibility
-                elif this_score > top_score:
-                    result = possibility
-                    top_score = this_score
-            else:
-                print('WTF THERE WAS AN INVALID RESULT')
-
-        print('Got to the end of possibility checking without finding a top result')
-        print('Will return the highest scoring result')
-
-        if result == None:
-            print('No possibilities')
-            return False
-        else:
-            print('Maximum score found was ' + str(top_score))
-            return result
-
-
-
-
 def tc(label):
     global times, labels
     times.append(time.clock())
@@ -1748,36 +1703,9 @@ def ts():
     labels = {}
 
 
-
-def choose_moves(system):
-    global feasable_size
-    tc('start')
-    sys_backup = copy.deepcopy(system)
-    outcome = simplify_system(system, True)
-    tc('simplify_system')
-    if total_combinations(system) == 1:
-        print('The system only has one possibility so returning early')
-        return system
-    else:
-        print('Will try freezing the system')
-        attempt_freeze(system)
-        out = solve_system(system, outcome)
-        if out != None:
-            print('solve_system returned - choose moves will return')
-            try:
-                for a in out:
-                    print(str(a[0]) +  ' -> ' + str(a[1]))
-            except TypeError:
-                print('ERROR: TypeError')
-                print(out)
-            return out
-        else:
-            print('solve_system returned NONE')
-
-
-
 def system_score_relative(system):
     return sum([system[b]['scores'][0] for b in system])
+
 
 def calculate_relative_score(system, moves):
     out = 0
@@ -1786,58 +1714,61 @@ def calculate_relative_score(system, moves):
     return out
 
 
-def decide_actions(movements, recursed=False):
+def solve_sys(system, details):
+    possibilities = system_walk(system, details)
+    if possibilities != []:
+        top_score = -9999
+        result = None
+        for possibility in possibilities:
+            print('solve_sys - assessing possibility ' + str(possibility))
+            if is_valid(possibility):
+                score = system_score_relative(possibility)
+                if system_score_relative(possibility) == details['score_gain_required']:
+                    print('top possiblilty found, returning it')
+                    return possibility
+                elif this_score > top_score:
+                    result = possibility
+                    top_score = score
+        if result is not None:
+            print('returning a possiblilty')
+            return result
+    print('solve_sys no possiblity, picking best')
+    return None 
+
+
+def settle_sys(system, field):
+    for subsystem in split_sys(system):
+        details = simplify_sys(subsystem, field)
+        combinations = total_combinations(subsystem)
+
+        if 1 < combinations <= feasable_size:
+            make_moves(subsystem, pick_best(subsystem, details))
+        elif combinations > feasable_size:
+            subsystem = solve_sys(subsystem, details)
+            if subsystem is None:
+                print('Brute forcing a solution as solve_sys returned None')
+                make_moves(subsystem, pick_best(subsystem, details))
+            #attempt_freeze(subsystem)
+        for bot in subsystem:
+            system[bot] = subsystem[bot]
+
+    return system
+
+
+
+def choose_moves(system):
     global feasable_size
+    sys_backup = copy.deepcopy(system)
+    outcome = simplify_sys(system, True)
+    if total_combinations(system) == 1:
+        return system
+    else:
+        attempt_freeze(system)
+        out = solve_sys(system, outcome)
+        if out != None:
+            return out
 
-    final_movements = {}
-    # The movements_group movement decisions have been split
-    for movement_group in group_by_interferrence(movements[:]):
-
-        # Go through each member truncating their list of options
-        # to end at with the first option that no other robots
-        # have available to them. Remember, options are sorted by benefit.
-
-        reduced = movement_group[:]
-
-        for pos in range(5):
-            for i in range(len(movement_group)):
-                if pos < len(movement_group[i][1]):
-                    test = movement_group[i][1][pos]
-                    contest = False
-                    for j in range(len(movement_group)):
-                        if j != i:
-                            if test in movement_group[j][1]:
-                                contest = True
-                                break
-                    if not contest:
-                        reduced[i] = [reduced[i][0], reduced[i][1][:pos+1], reduced[i][2][:pos+1]]
-
-        num_options = total_combinations(reduced)
-
-        if num_options == 1:
-            for index, member in enumerate(movement_group):
-                final_movements[member[0]] = reduced[index][1][0]
-        elif num_options < feasable_size:
-            top_combo = pick_best(reduced)
-            if top_combo is None:
-                return None
-            for index, member in enumerate(movement_group):
-                final_movements[member[0]] = top_combo[index][1]
-        else:
-            system = {}
-            for member in reduced:
-                system[member[0]] = {
-                    'options': member[1],
-                    'scores': member[2]
-                }
-            breakdown = choose_moves(system)
-            for bot in breakdown:
-                final_movements[bot] = breakdown[bot]['options'][0]
-
-    ts()
-    return final_movements
-
-decided_movements = None
+decided_options = None
 
 
 def level4_field(radius, max_points=13, step=1, width=2):
@@ -1874,12 +1805,26 @@ def find_frontline_radius(system, width=2):
     return 0
 
 
-class Robot:
+def create_system(bots, field):
+    system = {}
+    for bot in bots:
+        options = available_options(bot)
+        current_score = fieldval(bot, field)
+        scores = [fieldval(coord_to, field) - current_score for coord_to in options]    
+        moves = [(x[0], x[1]) for x in zip(options, scores)]
+        moves.sort(key=lambda x: x[1], reverse=True)
+        system[bot] = {
+            'options': [x[0] for x in moves],
+            'scores':  [x[1] for x in moves]
+        }
+    return system
 
+
+class Robot:
 
     def act(self, game):
         global game_turn, attack_damage, spawn, obstacle, centre
-        global move_count, decided_movements, frontlinelogic
+        global move_count, decided_options, frontlinelogic
         global vulnerability, health_diffs, attack_ratio
 
         robots = game.robots
@@ -1897,7 +1842,6 @@ class Robot:
             available_members = [x for x in friendlies]
             frontline_radius = find_frontline_radius(friendlies, 1)
             print('frontline_radius = ' + str(frontline_radius))
-            frontline_radius = 1
             frontlinelogic = level4_field(frontline_radius, max_points=40, width=2, step=2)
 
             health_diffs = {}
@@ -1942,13 +1886,13 @@ class Robot:
                             vulnerability[robot] = distance
                             break
 
-            for bot in enemies:
-                if vulnerability[bot] > 6:
-                    for distance in range(vulnerability[bot]):
-                        for (x, y) in squares_dist(bot, distance):
-                            if within_bounds((x, y)):
-                                if (x, y) not in friendlies:
-                                    frontlinelogic[y][x] += (vulnerability[bot] - distance) * 10
+#            for bot in enemies:
+#                if vulnerability[bot] > 6:
+#                    for distance in range(vulnerability[bot]):
+#                        for (x, y) in squares_dist(bot, distance):
+#                            if within_bounds((x, y)):
+#                                if (x, y) not in friendlies:
+#                                    frontlinelogic[y][x] += (vulnerability[bot] - distance) * 10
 
             for bot in robots:
                 print('({0:2d},{1:2d})'.format(*bot)),
@@ -1961,35 +1905,29 @@ class Robot:
                 print('health_diffs = {0:2d}'.format(health_diffs[bot]))
 
 
-            for bot in enemies:
-                enemy_adj = adjacent(bot)
-                min_score = min([frontlinelogic[y][x] for x,y in enemy_adj]) - 10
-                if min_score < 0:
-                    min_score = 0
-                for x, y in enemy_adj:
-                    frontlinelogic[y][x] = min_score
-                frontlinelogic[bot[1]][bot[0]] = min_score
-
-            if turn % 10 == 9:
-                for x, y in spawn:
-                    frontlinelogic[y][x] = 10
-                for x, y in deepspawn:
-                    frontlinelogic[y][x] = 0
+#            for bot in enemies:
+#                enemy_adj = adjacent(bot)
+#                min_score = min([frontlinelogic[y][x] for x,y in enemy_adj]) - 10
+#                if min_score < 0:
+#                    min_score = 0
+#                for x, y in enemy_adj:
+#                    frontlinelogic[y][x] = min_score
+#                frontlinelogic[bot[1]][bot[0]] = min_score
+#
+#            if turn % 10 == 9:
+#                for x, y in spawn:
+#                    frontlinelogic[y][x] = 10
+#                for x, y in deepspawn:
+#                    frontlinelogic[y][x] = 0
 
             print_field(frontlinelogic)
+            system = create_system(friendlies, frontlinelogic)
 
-            # All the movement possibilities
-            bots = [x for x in friendlies]
-            moves = [available_options(x) for x in bots]
-            gains = [movement_gains(action, frontlinelogic) for action in zip(bots, moves)]
-            name_me = zip(bots, moves, gains)
-            # Turn the moves into ordered lists
-            group_sorted_movements = [movelist_sorted(x[0], list(x[1]), x[2]) for x in name_me]
-
-            decided_movements = decide_actions(group_sorted_movements)
+            decided_options = settle_sys(system, frontlinelogic)
+            print('settle_sys returned with ' + str(decided_options))
 
         try:
-            move = decided_movements[self.location]
+            move = decided_options[self.location]['options'][0]
 
             enemies_adjacent = set(adjacent(self.location)) & enemies
             if enemies_adjacent and attack_ratio[self.location] > -1 and robots[self.location].hp > 9:
