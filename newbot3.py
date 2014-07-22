@@ -61,32 +61,32 @@ def print_field(field):
         print('')
 
 
-
 def fieldval((x, y), field):
     return int(field[y][x])
 
 
 def newfield():
     return [
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,],
-     [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,   0,   0,   0,   0,]]
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,]
+    ]
 
 
 # Will choose the most logical move and if two of equal logic value exist
@@ -270,32 +270,6 @@ def deny_move(system, winner, target, return_system=False):
         return system
 
 
-# def grant_move(system, (winner, target)):
-
-#     for pos, bot in system.items():
-#         if pos == winner:
-#             # Make this move the only option for the winner
-#             bot['scores'] = [bot['scores'][bot['options'].index(target)]]
-#             bot['options'] = [target]
-#         else:
-#             if pos == target:
-#                 # Remove bot swap as an option for target square
-#                 try:
-#                     swap_index = bot['options'].index(winner)
-#                 except:
-#                     swap_index = None
-
-#                 if swap_index:
-#                     print('swap found')
-#                     del bot['options'][swap_index]
-#                     del bot['scores'][swap_index]
-#             if target in bot['options']:
-#                 print('collision')
-#                 # Remove this option from other bots move options
-#                 bot['scores'].remove(bot['scores'][bot['options'].index(target)])
-#                 bot['options'].remove(target)
-
-#     return system
 
 def get_print_dimensions(system):
     x_min = 18
@@ -773,7 +747,7 @@ def shortest_paths(start, end, available_squares):
     return path_walk(squares_by_dist)
 
 
-def flaten_pathnest(element, level):
+def flaten_pathnest(element, level=-1):
     """
     Take a nested array from shortest_paths and
     flatten it while removing paths that dont lead
@@ -781,12 +755,15 @@ def flaten_pathnest(element, level):
     """
     out = []
     if type(element) == list:
-        level += 1
         for item in element:
-            out += flaten_pathnest(item, level)
+            if type(item) == list:
+                out += flaten_pathnest(item, level)
+            else:
+                level += 1
+                out.append((item, level))
         return out
     else:
-        level -= 1
+        # level -= 1
         return [(element,level)]
 
 
@@ -796,16 +773,16 @@ def find_paths(start, end, available):
     the given start and end points
     """
     path_nest = shortest_paths(start, end, available)
-    if path_nest is None:
-        return []
-    flat_nest = flaten_pathnest(path_nest[0],0)
+    flat_nest = flaten_pathnest(path_nest)
     paths = []
     tmp = []
-    last_level = 0
+    last_level = -1
     for node, level in flat_nest:
-        if level < last_level:
-            tmp = tmp[:level]
-        tmp += [node]
+        try:
+            tmp[level] = node
+        except:
+            tmp.append(node)
+
         if node == end:
             paths.append(tmp)
             tmp = tmp[:level]
@@ -918,7 +895,7 @@ def mix_lists(xs, ys):
 
 def solve_microsystems(system):
         print('Identify identical contest sets and grant')
-        copies = [[a,b] for a in system for b in system if a != b and (set(system[a]['options']) - set([a])) == (set(system[b]['options']) - set([b])) and (set(system[a]['options']) - set([a]) != set())]
+        copies = [[a,b] for a in system for b in system if a != b and (set(system[a]['options']) - set([a])) == (set(system[b]['options']) - set([b])) and (set(system[a]['options']) - set([a]) != set()) and ((set(system[a]['options']) - set([a])) & set(system.keys()) == set())]
         micro_systems_pairs = []
         for pair in copies[:]:
             if pair not in micro_systems_pairs and [pair[1], pair[0]] not in micro_systems_pairs:
@@ -965,27 +942,30 @@ def try_movement_sets(system, targets, candidates, squares):
     else:
         print('No simplifications made')
 
-    tmp_system = {}
-    for candidate in candidates:
-        tmp_system[candidate] = system[candidate]
+    # tmp_system = {}
+    # for candidate in candidates:
+    #     tmp_system[candidate] = system[candidate]
 
-    show_system(tmp_system)
+    # show_system(tmp_system)
 
-    for a in tmp_system:
-        print(str(a) + ' - ' + str(tmp_system[a]))
+    # for a in tmp_system:
+    #     print(str(a) + ' - ' + str(tmp_system[a]))
 
-    if total_combinations(tmp_system) < (feasable_size / 1000):
-        print('The tmp_system has under ' + str((feasable_size / 1000)) + ' moves, solving NOW')
-        best = pick_best(tmp_system)
-        for coord_from, coord_to in best:
-            grant_move(system, coord_from, coord_to)
-            return True
+    # if total_combinations(tmp_system) < (feasable_size / 1000):
+    #     print('The tmp_system has under ' + str((feasable_size / 1000)) + ' moves, solving NOW')
+    #     best = pick_best(tmp_system)
+    #     make_moves(tmp_system, best) # REMOVE THIS, ITS ONLY FOR DISPLAYING REDUCED SYSTEM
+    #     show_system(tmp_system)
+    #     for coord_from, coord_to in best:
+    #         grant_move(system, coord_from, coord_to)
+    #     return True
 
-    print('The temp system has TOO MAYNY combinations to solve straight')
-    print(total_combinations(tmp_system))
 
-    subsystems = split_sys(tmp_system)
-    print('Can be split into ' + str(len(subsystems)) + ' subsystems')
+    # print('The temp system has TOO MAYNY combinations to solve straight')
+    # print(total_combinations(tmp_system))
+
+    # subsystems = split_sys(tmp_system)
+    # print('Can be split into ' + str(len(subsystems)) + ' subsystems')
 
     # TODO: This is being split so that we can separate target-candidate
     # systems and solve separately.
@@ -1106,7 +1086,11 @@ def make_obvious_moves(system, detail, debug=False):
         make_obvious_moves(system, detail, debug)
 
 
-def system_details(system, outcome, score_absolute_initial, field):
+def system_details(system, outcome, field):
+
+    score_absolute_initial = 0
+    for bot in system:
+        score_absolute_initial += fieldval(bot, field)
     # Bots that didn't partake in the grand simplification
     outcome['available_bots'] = set(outcome['available_bots']) - set([bot for bot in outcome['available_bots'] if len(system[bot]['options']) == 1])
     unavailable_bots = list(set(system.keys()) - outcome['available_bots'])
@@ -1185,10 +1169,9 @@ def system_details(system, outcome, score_absolute_initial, field):
 
 def reduce_sys(system):
     reduced = False
-    #((a, b), [moves], [scores]),
     for index in range(5):
         for bot in system.keys():
-            if index < len(system[bot]['options']):
+            if index < len(system[bot]['options']) - 1:
                 test_move = system[bot]['options'][index]
                 contest = False
                 for contestant in [x for x in system.keys() if x != bot]:
@@ -1199,18 +1182,16 @@ def reduce_sys(system):
                     system[bot]['options'] = system[bot]['options'][:index+1]
                     system[bot]['scores'] = system[bot]['scores'][:index+1]
                     reduced = True
+    consolodate(system)
     return reduced
 
 
 def simplify_sys(system, field, debug=False):
     changed = False
-    reduce_sys(system)
+    while reduce_sys(system):
+        print('System has been reduced')
 
     global feasable_size
-
-    score_absolute_initial = 0
-    for x, y in system:
-        score_absolute_initial += fieldval((x, y), field)
 
     if debug:
         print('')
@@ -1301,7 +1282,7 @@ def simplify_sys(system, field, debug=False):
 
 
 
-    d = system_details(system, outcome, score_absolute_initial, field)
+    d = system_details(system, outcome, field)
 
     if debug:
         print('')
@@ -1379,7 +1360,7 @@ def simplify_sys(system, field, debug=False):
                        coord_from,
                        coord_to)
 
-        d = system_details(system, outcome, score_absolute_initial, field)
+        d = system_details(system, outcome, field)
         # print('ERROR: The following bots could not make it to the ideal system')
         # print(bots_to_figure_out)
 
@@ -1415,6 +1396,28 @@ def simplify_sys(system, field, debug=False):
     if d['num_target_bots_in_optional'] == 0:
         if debug:
             print('No optional squares exist so bots should just be packing into occupied squares')
+            if len(d['target_occupied_not_occupied']) > 0:
+                print('Will try packing in')
+                print('try_movement_sets being called with parameters')
+                print('system = ' + str(system))
+                print('targets = ' + str(d['target_occupied_not_occupied']))
+                print('candidates = ' + str(d['movable_bots_in_occupied_that_have_to_move']))
+                print('squares = ' + str(d['movable_bots_in_occupied']))
+                if try_movement_sets(system,
+                                     d['target_occupied_not_occupied'],
+                                     d['movable_bots_in_occupied_that_have_to_move'],
+                                     d['movable_bots_in_occupied']):
+                    if debug:
+                        print('The movements were made')
+                        print_system(system)
+                    changed = True
+                else:
+                    if debug:
+                        print('The movements could not be made')
+            else:
+                print('target_occupied_not_occupied had a length < 1')
+
+
     else:
         if debug:
             print('Optional squares exist')
@@ -1482,6 +1485,7 @@ def simplify_sys(system, field, debug=False):
                                              d['movable_bots_in_occupied']):
                             if debug:
                                 print('The movements were made')
+                                print_system(system)
                             changed = True
                         else:
                             if debug:
@@ -1494,10 +1498,15 @@ def simplify_sys(system, field, debug=False):
                     if debug:
                         print('It should be possible to make this happen')
                         print('B - Like by doing one from ' + str(num_to_implement) + ' of the following solutions')
-                    print_system(system,
-                                 justbots=outcome['available_bots'],
-                                 occupied=outcome['occupied'],
-                                 optional=outcome['optional'])
+                    print('try_movement_sets being called with parameters')
+                    print('system = ' + str(system))
+                    print('targets = ' + str(d['target_occupied_not_occupied']))
+                    print('candidates = ' + str(d['current_bots_in_optional_that_can_move_to_occupied'] + d['movable_bots_in_occupied_that_have_to_move']))
+                    print('squares = ' + str(d['movable_bots_in_occupied']))
+                    # print_system(system,
+                    #              justbots=outcome['available_bots'],
+                    #              occupied=outcome['occupied'],
+                    #              optional=outcome['optional'])
 
                     if try_movement_sets(system,
                                          d['target_occupied_not_occupied'],
@@ -1505,6 +1514,7 @@ def simplify_sys(system, field, debug=False):
                                          d['movable_bots_in_occupied']):
                         if debug:
                             print('The movements were made')
+                            print_system(system)
                         changed = True
                     else:
                         if debug:
@@ -1558,38 +1568,6 @@ def attempt_freeze(system):
 
 
 
-#def freeze(system, score_absolute_initial, score_absolute_max):
-#    # If we fixed everyones position that has options, how close do we get?
-#    print('Testing a bot freeze situation')
-#    test_sys = copy.deepcopy(system)
-#    for bot in test_sys:
-#        if len(test_sys[bot]['options']) > 1 and bot in test_sys[bot]['options']:
-#            grant_move(test_sys, bot, bot)
-#    print('Did this generate a solution?')
-#
-#    moves = []
-#    for bot in test_sys:
-#        if len(test_sys[bot]['options']) == 1:
-#            moves.append((bot, test_sys[bot]['options'][0]))
-#        else:
-#            moves = False
-#            break
-#
-#    if moves == False:
-#        raise UserWarning('Invalid system on freeze')
-#    else:
-#        print('Yes it did')
-#        score_diff = calculate_relative_score(test_sys, moves)
-#        frozen_score = score_absolute_initial + score_diff
-#        print('The frozen system now has a score of ' + str(frozen_score))
-#        if frozen_score == score_absolute_max:
-#            print('Will apply this to the real system')
-#            for bot in system:
-#                if len(system[bot]['options']) > 1 and bot in system[bot]['options']:
-#                    grant_move(system, bot, bot)
-
-
-
 
 def is_valid(system):
     consolodate(system)
@@ -1635,7 +1613,7 @@ def system_walk(system, outcome):
                 if is_settled(sys):
                     # print('(SETTLED)')
                     if 'score_gain_required' in outcome and system_score_relative(sys) == outcome['score_gain_required']:
-                        # print('And is max gain - returning this system')
+                        print('And is max gain - returning this system')
                         tc('system_walk')
                         return [sys]
                     else:
@@ -1646,7 +1624,7 @@ def system_walk(system, outcome):
                     if 'score_gain_required' in outcome:
                         for tmp_sys in test:
                             if system_score_relative(tmp_sys) == outcome['score_gain_required']:
-                                # print('Top solution detected - avalanching down')
+                                print('Top solution detected - avalanching down')
                                 tc('system_walk')
                                 return [tmp_sys]
                     else:
@@ -1662,21 +1640,22 @@ def system_walk(system, outcome):
                     for move_from, move_to in best:
                         print('granting move ' + str(move))
                         grant_move(system, move_from, move_to)
+                    return [system]
                 else:
                     if 'score_gain_required' in outcome:
                         if system_score_relative(system) == outcome['score_gain_required']:
                             print('A system with max gain has been found!')
+                            tc('system_walk')
+                            return [system]
                         else:
                             print('The found system has a score of ' + str(system_score_relative(system)) + ' but we needed ' + str(outcome['score_gain_required']))
                             print('Returning - ' + str(system))
                             tc('system_walk')
                             return [system]
             else:
-                print('The system is invalid')
+                print('system_walk: The system is invalid, returning None')
                 tc('system_walk')
                 return None
-            tc('system_walk')
-            return [system]
     else:
         print('system_walk - system is settled, returning')
         tc('system_walk')
@@ -1716,57 +1695,64 @@ def calculate_relative_score(system, moves):
 
 def solve_sys(system, details):
     possibilities = system_walk(system, details)
+    print('solve_sys: Entered')
+    if 'score_gain_required' in details:
+        print('solve_sys: Looking for a system score gain of ' + str(details['score_gain_required']))
     if possibilities != []:
         top_score = -9999
         result = None
         for possibility in possibilities:
-            print('solve_sys - assessing possibility ' + str(possibility))
+            print('solve_sys: assessing a possibility')
             if is_valid(possibility):
                 score = system_score_relative(possibility)
+                print('solve_sys: is valid and has a score of ' + str(score))
                 if system_score_relative(possibility) == details['score_gain_required']:
-                    print('top possiblilty found, returning it')
+                    print('solve_sys: top possiblilty found, returning it')
                     return possibility
                 elif this_score > top_score:
+                    print('solve_sys: this is a new high-score')
                     result = possibility
                     top_score = score
+            else:
+                print('solve_sys: the possibility was invalid')
         if result is not None:
-            print('returning a possiblilty')
+            print('solve_sys: returning the highest scoring possiblilty')
             return result
-    print('solve_sys no possiblity, picking best')
-    return None 
+        else:
+            print('solve_sys: no valid possibilities, returning None')
+            return None
+    else:
+        print('solve_sys: possibilities = [], that was returned by system_walk, returning None')
+        return None
 
 
 def settle_sys(system, field):
     for subsystem in split_sys(system):
-        details = simplify_sys(subsystem, field)
-        combinations = total_combinations(subsystem)
-
-        if 1 < combinations <= feasable_size:
-            make_moves(subsystem, pick_best(subsystem, details))
-        elif combinations > feasable_size:
-            subsystem = solve_sys(subsystem, details)
-            if subsystem is None:
-                print('Brute forcing a solution as solve_sys returned None')
+        if total_combinations(subsystem) < 1000:
+            print('settle_sys: Subsystem combinations < 1000 so brute forcing')
+            make_moves(subsystem, pick_best(subsystem))
+        else:
+            details = simplify_sys(subsystem, field)
+            combinations = total_combinations(subsystem)
+            print('settle_sys: this subsystem has ' + str(combinations) + ' combinations')
+            if 1 < combinations <= feasable_size:
                 make_moves(subsystem, pick_best(subsystem, details))
-            #attempt_freeze(subsystem)
+            elif combinations > feasable_size:
+
+                tmp_system = solve_sys(subsystem, details)
+                if tmp_system is None:
+                    print('settle_sys: No solved system - ABORTING !!!!!!')
+                    raise UserWarning('no solution found')
+                else:
+                    print('settle_sys: Solved')
+                    subsystem = tmp_system
+
+        # Implement subsystem outcome into system
         for bot in subsystem:
             system[bot] = subsystem[bot]
 
     return system
 
-
-
-def choose_moves(system):
-    global feasable_size
-    sys_backup = copy.deepcopy(system)
-    outcome = simplify_sys(system, True)
-    if total_combinations(system) == 1:
-        return system
-    else:
-        attempt_freeze(system)
-        out = solve_sys(system, outcome)
-        if out != None:
-            return out
 
 decided_options = None
 
@@ -1810,7 +1796,7 @@ def create_system(bots, field):
     for bot in bots:
         options = available_options(bot)
         current_score = fieldval(bot, field)
-        scores = [fieldval(coord_to, field) - current_score for coord_to in options]    
+        scores = [fieldval(coord_to, field) - current_score for coord_to in options]
         moves = [(x[0], x[1]) for x in zip(options, scores)]
         moves.sort(key=lambda x: x[1], reverse=True)
         system[bot] = {
@@ -1842,57 +1828,32 @@ class Robot:
             available_members = [x for x in friendlies]
             frontline_radius = find_frontline_radius(friendlies, 1)
             print('frontline_radius = ' + str(frontline_radius))
-            frontlinelogic = level4_field(frontline_radius, max_points=40, width=2, step=2)
+            frontlinelogic = level4_field(frontline_radius, max_points=40, width=1, step=2)
 
             health_diffs = {}
             attack_ratio = {}
             vulnerability = {}
 
 
-            for robot in list(enemies)[:]:
-                coords_around = surrounding(robot)
-                friends_around = [bot for bot in list(coords_around) if bot in list(friendlies)]
-                relevant_cells = []
-                for friend in friends_around:
-                    relevant_cells += list(surrounding(friend) & coords_around)
-                support = [bot for bot in enemies if bot in relevant_cells]
-                friendly_heath = sum(robots[bot].hp for bot in friends_around)
-                health_diff = robots[robot].hp - friendly_heath
-                strength = 1 - len(friends_around) + len(support)
-                # print('enemy ' + str(robot) + ' - health_diff = ' + str(health_diff) + ', strength = ' +str(strength))
-                health_diffs[robot] = health_diff
-                attack_ratio[robot] = strength
+            for team, opponents in [(friendlies, enemies), (enemies, friendlies)]:
+                for robot in team:
+                    coords_around = surrounding(robot)
+                    opponents_around = [bot for bot in list(coords_around) if bot in list(opponents)]
+                    relevant_cells = []
+                    for opponent in opponents_around:
+                        relevant_cells += list(surrounding(opponent) & coords_around)
+                    support = [bot for bot in team if bot in relevant_cells]
+                    opponent_health = sum([robots[bot].hp for bot in opponents_around])
+                    health_diff = robots[robot].hp - opponent_health
+                    strength = 1 - len(opponents_around) + len(support)
+                    health_diffs[robot] = health_diff
+                    attack_ratio[robot] = strength
 
-            for robot in list(friendlies)[:]:
-                coords_around = surrounding(robot)
-                enemies_around = [bot for bot in list(coords_around) if bot in list(enemies)]
-                relevant_cells = []
-                for enemy in enemies_around:
-                    relevant_cells += list(surrounding(enemy) & coords_around)
-                support = [bot for bot in friendlies if bot in relevant_cells]
-                enemy_health = sum([robots[bot].hp for bot in enemies_around])
-                health_diff = robots[robot].hp - enemy_health
-                strength = 1 - len(enemies_around) + len(support)
-                # print('friend ' + str(robot) + ' - health_diff = ' + str(health_diff) + ', strength = ' +str(strength))
-                health_diffs[robot] = health_diff
-                attack_ratio[robot] = strength
-
-
-            for side in [friendlies, enemies]:
-                for robot in side:
-                    # Find closest ally
+                    # Calculate vunerability
                     for distance in range(1, 25):
-                        if set(squares_dist(robot, distance)) & set(side):
+                        if set(squares_dist(robot, distance)) & set(team):
                             vulnerability[robot] = distance
                             break
-
-#            for bot in enemies:
-#                if vulnerability[bot] > 6:
-#                    for distance in range(vulnerability[bot]):
-#                        for (x, y) in squares_dist(bot, distance):
-#                            if within_bounds((x, y)):
-#                                if (x, y) not in friendlies:
-#                                    frontlinelogic[y][x] += (vulnerability[bot] - distance) * 10
 
             for bot in robots:
                 print('({0:2d},{1:2d})'.format(*bot)),
@@ -1905,20 +1866,11 @@ class Robot:
                 print('health_diffs = {0:2d}'.format(health_diffs[bot]))
 
 
-#            for bot in enemies:
-#                enemy_adj = adjacent(bot)
-#                min_score = min([frontlinelogic[y][x] for x,y in enemy_adj]) - 10
-#                if min_score < 0:
-#                    min_score = 0
-#                for x, y in enemy_adj:
-#                    frontlinelogic[y][x] = min_score
-#                frontlinelogic[bot[1]][bot[0]] = min_score
-#
-#            if turn % 10 == 9:
-#                for x, y in spawn:
-#                    frontlinelogic[y][x] = 10
-#                for x, y in deepspawn:
-#                    frontlinelogic[y][x] = 0
+            if turn % 10 == 9:
+                for x, y in spawn:
+                   frontlinelogic[y][x] = 10
+                for x, y in deepspawn:
+                   frontlinelogic[y][x] = 0
 
             print_field(frontlinelogic)
             system = create_system(friendlies, frontlinelogic)
