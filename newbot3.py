@@ -4,7 +4,7 @@ import random
 import itertools
 import time
 import operator
-import sys
+import heapq
 import copy
 
 times = []
@@ -694,101 +694,225 @@ def find_ideal_system(system, available_bots):
     return result
 
 
-def path_walk(path):
-    """
-    Return a nested list of possible paths that could be taken
-    by a bot in an attempt to move from the start to the end of
-    the given path list
-    """
-    if path == []:
-        return []
-    elif len(path) == 1:
-        options = path[0]
-        return [option for option in options]
-    else:
-        options = copy.deepcopy(path[0])
-        next_squares = copy.deepcopy(path[1])
-        remainder = None
-        if len(path) > 2:
-            remainder = copy.deepcopy(path[2:])
-        bang = []
-        for option in options:
-            # print(option)
-            rem_options = [list(adjacent(option) & set(next_squares))]
-            if remainder:
-                rem_options = rem_options + remainder
-            bang.append((option, rem_options))
-        return [[here] + path_walk(there) for here, there in copy.deepcopy(bang)]
+# def path_walk(path):
+#     """
+#     Return a nested list of possible paths that could be taken
+#     by a bot in an attempt to move from the start to the end of
+#     the given path list
+#     """
+#     if path == []:
+#         return []
+#     elif len(path) == 1:
+#         options = path[0]
+#         return [option for option in options]
+#     else:
+#         options = copy.deepcopy(path[0])
+#         next_squares = copy.deepcopy(path[1])
+#         remainder = None
+#         if len(path) > 2:
+#             remainder = copy.deepcopy(path[2:])
+#         bang = []
+#         for option in options:
+#             # print(option)
+#             rem_options = [list(adjacent(option) & set(next_squares))]
+#             if remainder:
+#                 rem_options = rem_options + remainder
+#             bang.append((option, rem_options))
+#         return [[here] + path_walk(there) for here, there in copy.deepcopy(bang)]
 
 
-def shortest_paths(start, end, available_squares):
-    """
-    Find the shortest paths between two coordinates
-    using only the array of squares passed
-    """
-    squares_by_dist = [[start]]
-    available_squares = set(available_squares)
-    distance = 0
-    at_radius = False
-    while at_radius == False:
-        distance += 1
-        squares = squares_dist(start, distance)
-        tmp = list(set(squares) & available_squares)
-        if tmp == []:
-            return None
-        elif end in tmp:
-            squares_by_dist.append([end])
-            at_radius = True
-        else:
-            squares_by_dist.append(tmp)
-        if distance > 19:
-            break
+# def shortest_paths(start, end, available_squares):
+#     """
+#     Find the shortest paths between two coordinates
+#     using only the array of squares passed
+#     """
+#     squares_by_dist = [[start]]
+#     available_squares = set(available_squares)
+#     distance = 0
+#     at_radius = False
+#     while at_radius == False:
+#         distance += 1
+#         squares = squares_dist(start, distance)
+#         tmp = list(set(squares) & available_squares)
+#         if tmp == []:
+#             return None
+#         elif end in tmp:
+#             squares_by_dist.append([end])
+#             at_radius = True
+#         else:
+#             squares_by_dist.append(tmp)
+#         if distance > 19:
+#             break
 
-    return path_walk(squares_by_dist)
+#     return path_walk(squares_by_dist)
 
 
-def flaten_pathnest(element, level=-1):
-    """
-    Take a nested array from shortest_paths and
-    flatten it while removing paths that dont lead
-    to the end square
-    """
+# def flaten_pathnest(element, level=-1):
+#     """
+#     Take a nested array from shortest_paths and
+#     flatten it while removing paths that dont lead
+#     to the end square
+#     """
+#     out = []
+#     if type(element) == list:
+#         for item in element:
+#             if type(item) == list:
+#                 out += flaten_pathnest(item, level)
+#             else:
+#                 level += 1
+#                 out.append((item, level))
+#         return out
+#     else:
+#         # level -= 1
+#         return [(element,level)]
+
+
+# def find_paths(start, end, available):
+#     """
+#     Return a list of the shortest possible paths between
+#     the given start and end points
+#     """
+#     path_nest = shortest_paths(start, end, available)
+#     flat_nest = flaten_pathnest(path_nest)
+#     paths = []
+#     tmp = []
+#     last_level = -1
+#     for node, level in flat_nest:
+#         try:
+#             tmp[level] = node
+#         except:
+#             tmp.append(node)
+
+#         if node == end:
+#             paths.append(tmp)
+#             tmp = tmp[:level]
+#         last_level = level
+#     return paths
+
+class Cell(object):
+    def __init__(self, x, y):
+        """
+        Initialize new cell
+
+        @param x cell x coordinate
+        @param y cell y coordinate
+        @param reachable is cell reachable? not a wall?
+        """
+        self.x = x
+        self.y = y
+        self.parent = None
+        self.g = 0
+        self.h = 0
+        self.f = 0
+
+class AStar(object):
+
+    def __init__(self, available_coords):
+        self.op = []
+        heapq.heapify(self.op)
+        self.cl = set()
+        self.cells = []
+        self.gridHeight = 19
+        self.gridWidth = 19
+        self.available_coords = available_coords
+
+
+    def find_path(self, start, end):
+        path = []
+        self.cells = []
+        for x, y in self.available_coords:
+            self.cells.append(Cell(x, y))
+        self.cells.append(Cell(start[0], start[1]))
+        self.cells.append(Cell(end[0], end[1]))
+        self.end = self.get_cell(start[0], start[1])
+        self.start = self.get_cell(end[0], end[1])
+
+        # add starting cell to open heap queue
+        heapq.heappush(self.op, (self.start.f, self.start))
+        while len(self.op):
+            # pop cell from heap queue
+            f, cell = heapq.heappop(self.op)
+            # add cell to closed list so we don't process it twice
+            self.cl.add(cell)
+            # if ending cell, display found path
+            if cell is self.end:
+                return self.return_path()
+
+            # get adjacent cells for cell
+            adj_cells = self.get_adjacent_cells(cell)
+            for c in adj_cells:
+                if (c.x, c.y) in self.available_coords and c not in self.cl:
+                    if (c.f, c) in self.op:
+                        # if adj cell in open list, check if current path is
+                        # better than the one previously found for this adj
+                        # cell.
+                        if c.g > cell.g + 10:
+                            self.update_cell(c, cell)
+                    else:
+                        self.update_cell(c, cell)
+                        # add adj cell to open list
+                        heapq.heappush(self.op, (c.f, c))
+
+
+    def get_heuristic(self, cell):
+        """
+        Compute the heuristic value H for a cell: distance between
+        this cell and the ending cell multiply by 10.
+
+        @param cell
+        @returns heuristic value H
+        """
+        return (abs(cell.x - self.end.x) + abs(cell.y - self.end.y)) * 10
+
+    def get_cell(self, x, y):
+        """
+        Returns a cell from the cells list
+
+        @param x cell x coordinate
+        @param y cell y coordinate
+        @returns cell
+        """
+        # return self.cells[x * self.gridHeight + y]
+        return [cell for cell in self.cells if cell.x == x and cell.y == y][0]
+
+    def get_adjacent_cells(self, cell):
+        return [self.get_cell(x, y) for x, y in adjacent((cell.x, cell.y)) if (x, y) in self.available_coords]
+
+    def return_path(self):
+        path = []
+        cell = self.end
+        while cell.parent is not self.start:
+            path.append((cell.x, cell.y))
+            cell = cell.parent
+        path.append((cell.x, cell.y))
+        path.append((self.start.x, self.start.y))
+        return path
+
+
+    def update_cell(self, adj, cell):
+        """
+        Update adjacent cell
+
+        @param adj adjacent cell to current cell
+        @param cell current cell being processed
+        """
+        adj.g = cell.g + 10
+        adj.h = self.get_heuristic(adj)
+        adj.parent = cell
+        adj.f = adj.h + adj.g
+
+
+def find_path(start, end, available):
+    a = AStar(available + [start] + [end])
+    path = a.find_path(start, end)
+    if path is None:
+        return None
     out = []
-    if type(element) == list:
-        for item in element:
-            if type(item) == list:
-                out += flaten_pathnest(item, level)
-            else:
-                level += 1
-                out.append((item, level))
-        return out
-    else:
-        # level -= 1
-        return [(element,level)]
-
-
-def find_paths(start, end, available):
-    """
-    Return a list of the shortest possible paths between
-    the given start and end points
-    """
-    path_nest = shortest_paths(start, end, available)
-    flat_nest = flaten_pathnest(path_nest)
-    paths = []
-    tmp = []
-    last_level = -1
-    for node, level in flat_nest:
-        try:
-            tmp[level] = node
-        except:
-            tmp.append(node)
-
-        if node == end:
-            paths.append(tmp)
-            tmp = tmp[:level]
-        last_level = level
-    return paths
-
+    i, length = 0, len(path) - 1
+    while i < length:
+        out.append((path[i], path[i+1]))
+        i += 1
+    return out
 
 
 
@@ -846,12 +970,12 @@ def check_moves(system, move_paths):
 
 
 def make_moves(system, move_paths):
-    for a in system:
-        print(str(a) + ' - ' + str(system[a]))
     for moves in move_paths:
         for start in range(len(moves)-1):
             end = start + 1
             grant_move(system, moves[start], moves[end])
+    for a in system:
+        print(str(a) + ' - ' + str(system[a]))
 
 
 def mixer(xs, ys):
@@ -942,46 +1066,14 @@ def try_movement_sets(system, targets, candidates, squares):
     else:
         print('No simplifications made')
 
-    # tmp_system = {}
-    # for candidate in candidates:
-    #     tmp_system[candidate] = system[candidate]
+    if len(targets) == 1 and len(candidates) == 1:
+        path = find_path(candidates[0], targets[0], squares)
+        if path is not None:
+            make_moves(system, path)
+            return True
+        else:
+            return False
 
-    # show_system(tmp_system)
-
-    # for a in tmp_system:
-    #     print(str(a) + ' - ' + str(tmp_system[a]))
-
-    # if total_combinations(tmp_system) < (feasable_size / 1000):
-    #     print('The tmp_system has under ' + str((feasable_size / 1000)) + ' moves, solving NOW')
-    #     best = pick_best(tmp_system)
-    #     make_moves(tmp_system, best) # REMOVE THIS, ITS ONLY FOR DISPLAYING REDUCED SYSTEM
-    #     show_system(tmp_system)
-    #     for coord_from, coord_to in best:
-    #         grant_move(system, coord_from, coord_to)
-    #     return True
-
-
-    # print('The temp system has TOO MAYNY combinations to solve straight')
-    # print(total_combinations(tmp_system))
-
-    # subsystems = split_sys(tmp_system)
-    # print('Can be split into ' + str(len(subsystems)) + ' subsystems')
-
-    # TODO: This is being split so that we can separate target-candidate
-    # systems and solve separately.
-
-    # NEEDS TO HAPPEN:
-    # Pluck targets and candidates out of each split system and solve
-    # for each subsystem
-
-    # print('SPLIT ATTEMPT...')
-    # print('There are ' + str(len(subsystems)) + ' subsystems')
-    # for subsystem in subsystems:
-
-    # if len(subsystems) == 1:
-    #     print('here it is')
-    #     for a in subsystems:
-    #         print(str(a) + ' - ' + str(subsystems[a]))
 
     tc('start')
     print('try_movement_sets dimensions')
@@ -990,11 +1082,19 @@ def try_movement_sets(system, targets, candidates, squares):
     match_sets = mix_lists(candidates, targets)
 
     # precheck for bad links
+    print('Precheck FOR BAD LINKS')
     bad_links = []
     for end in targets:
         for start in candidates:
-            if find_paths(start, end, squares + [end]) == []:
+            path = find_path(start, end, squares)
+            print(str(start) + ' -> ' + str(end) + ' = ' + str(path))
+            if path is None:
+                print('bad')
                 bad_links.append((start, end))
+            else:
+                print('okay')
+
+    print('bad links = ' + str(bad_links))
 
     available_coords = set(squares)
     for match_set in match_sets:
@@ -1005,36 +1105,54 @@ def try_movement_sets(system, targets, candidates, squares):
         taken_coords = set()
         for start, end in match_set:
             if (start, end) not in bad_links:
-                coords = copy.deepcopy(available_coords)
-                coords.add(end)
-                coords.difference(taken_coords)
-                print('Find paths between ' + str(start) + ' and ' + str(end))
-                paths = find_paths(start, end, list(coords))
-                print(str(len(paths)) + ' paths = ' + str(paths))
-                if paths == []:
+                tmp = copy.deepcopy(available_coords)
+                coords = tmp.difference(taken_coords)
+                print('Find a path between ' + str(start) + ' and ' + str(end))
+                print('Using coords ' + str(list(coords)))
+                path = find_path(start, end, list(coords))
+                if path is None:
+                    print('couldnt path ' + str(start) + ' to ' + str(end))
                     skip = True
                     break
                 else:
-                    set_paths.append(paths)
+                    print('pathed as ' + str(path))
+                    coords = [end for start, end in path]
+                    coords.append(path[0][0])
+                    print('used coords = ' + str(coords))
+                    taken_coords = set(list(taken_coords) + coords)
+                    set_paths.append(path)
 
         print('Finished generating path sets')
         print(set_paths)
         print('')
 
-        if skip == False:
-            # print('Checking match_set, ' + str(match_set))
-            # print('Which generated the set_paths ' + str(set_paths))
+        if skip:
+            continue
+        else:
+            for path in set_paths:
+                make_moves(system, path)
+            tc('try_movement_sets')
+            return True
 
-            for path_group in itertools.product(*set_paths):
-                # print('Checking ' + str(path_group))
-                if check_moves(system, path_group):
-                    # print('Looking good, implementing set')
-                    make_moves(system, path_group)
-                    # tc('try_movement_sets')
-                    return True
-            # print('Tried all moves but none worked')
-        # else:
-            # print('Skipped as no paths')
+
+
+
+
+
+        # if skip == False:
+        #     # print('Checking match_set, ' + str(match_set))
+        #     # print('Which generated the set_paths ' + str(set_paths))
+
+        #     for path_group in itertools.product(*set_paths):
+        #         # print('Checking ' + str(path_group))
+        #         if check_moves(system, path_group):
+        #             # print('Looking good, implementing set')
+        #             make_moves(system, path_group)
+        #             # tc('try_movement_sets')
+        #             return True
+        #     # print('Tried all moves but none worked')
+        # # else:
+        #     # print('Skipped as no paths')
 
     # print('Fell out of loop without a solution')
     tc('try_movement_sets')
@@ -1121,6 +1239,7 @@ def system_details(system, outcome, field):
     num_target_bots_in_optional = outcome['num_optional']
     num_target_bots_in_occupied = len(outcome['occupied'])
     current_bots_in_optional = bots_in_optional + bots_outside_system_moving_to_optional + bots_in_occupied_moving_to_optional
+    current_bots_in_optional_that_can_move_to_other_optional = [bot for bot in current_bots_in_optional if set(system[bot]['options']) & set(outcome['optional'])]
     current_bots_in_optional = filter(lambda x: x not in bots_in_optional_moving_to_occupied, current_bots_in_optional)
     current_bots_in_optional_that_can_move_to_occupied = [bot for bot in current_bots_in_optional if set(system[bot]['options']) & set(outcome['occupied'])]
     current_bots_in_occupied = bots_in_occupied + bots_in_optional_moving_to_occupied + bots_outside_system_moving_to_occupied
@@ -1134,6 +1253,7 @@ def system_details(system, outcome, field):
     current_bots_outside = filter(lambda x: x not in bots_outside_system_moving_to_optional and x not in bots_outside_system_moving_to_occupied, bots_outside_system)
     min_possible_num_bots_in_optional = len(set(current_bots_in_optional) - set(current_bots_in_optional_that_can_move_to_occupied))
     movable_bots_in_occupied_that_have_to_move = [bot for bot in movable_bots_in_occupied if bot not in system[bot]['options']]
+
 
     details = {
        'score_absolute_initial': score_absolute_initial,
@@ -1150,6 +1270,7 @@ def system_details(system, outcome, field):
        'num_target_bots_in_occupied': num_target_bots_in_occupied,
        'current_bots_in_optional': current_bots_in_optional,
        'current_bots_in_optional': current_bots_in_optional,
+       'current_bots_in_optional_that_can_move_to_other_optional' : current_bots_in_optional_that_can_move_to_other_optional,
        'current_bots_in_optional_that_can_move_to_occupied': current_bots_in_optional_that_can_move_to_occupied,
        'current_bots_in_occupied': current_bots_in_occupied,
        'movable_bots_in_occupied': movable_bots_in_occupied,
@@ -1187,7 +1308,8 @@ def reduce_sys(system):
 
 
 def simplify_sys(system, field, debug=False):
-    changed = False
+    complexity_entry = total_combinations(system)
+
     while reduce_sys(system):
         print('System has been reduced')
 
@@ -1204,7 +1326,6 @@ def simplify_sys(system, field, debug=False):
     while grant_dangling_move(system):
         if debug:
             print('simplification made, repeating')
-        changed = True
 
     if debug:
         print('')
@@ -1235,7 +1356,6 @@ def simplify_sys(system, field, debug=False):
                     best = pick_best(subsys)
                     if best is not None:
                         make_moves(system, best)
-                        changed = True
                     else:
                         print('BEST MO')
             else:
@@ -1250,7 +1370,6 @@ def simplify_sys(system, field, debug=False):
                 print('')
                 for bot in subsys:
                     if subsys[bot]['options'] != system[bot]['options']:
-                        changed = True
                         removed_moves = list(set(system[bot]['options']) - set(subsys[bot]['options']))
                         if debug:
                             print('Subsystem differs with bot ' + str(bot) + ' by')
@@ -1259,7 +1378,6 @@ def simplify_sys(system, field, debug=False):
                         if removed_moves != []:
                             for move in removed_moves:
                                 deny_move(system, bot, move)
-                                changed = True
                         else:
                             raise UserWarning('No moves to remove but options changed!!!')
         print('Leaving THE SYSTEM SPLIT AREA AND SYSTEM IS ')
@@ -1312,8 +1430,6 @@ def simplify_sys(system, field, debug=False):
 
 
 
-
-
     ideal_system = set(outcome['occupied'] + outcome['optional'])
     detached_bots = list(set(movable_bots(system)) - set(outcome['available_bots']))
 
@@ -1331,7 +1447,6 @@ def simplify_sys(system, field, debug=False):
             tmp = pick_best(sub_system)
             for start, end in tmp:
                 grant_move(system, start, end)
-                changed = True
 
 
     # Make the simplifications that push the current available bots
@@ -1342,7 +1457,6 @@ def simplify_sys(system, field, debug=False):
             move_removals = list(set(system[bot]['options']) - ideal_system)
             for move_removal in move_removals:
                 deny_move(system, bot, move_removal)
-                changed = True
         else:
             bots_to_figure_out.append(bot)
             # raise UserWarning('Bot ' + str(bot) + ' cant make it to the sub_system')
@@ -1410,7 +1524,6 @@ def simplify_sys(system, field, debug=False):
                     if debug:
                         print('The movements were made')
                         print_system(system)
-                    changed = True
                 else:
                     if debug:
                         print('The movements could not be made')
@@ -1470,7 +1583,7 @@ def simplify_sys(system, field, debug=False):
                         print('score_gain_required now = ' + str(d['score_gain_required']))
                         print('score_absolute_max now = ' + str(d['score_absolute_max']))
 
-                    if deficit < len(d['current_bots_in_optional_that_can_move_to_occupied']):
+                    if deficit < num_bots_to_move_into_occupied:
                         make_obvious_moves(system, d, True)
                         if debug:
                             print('With remaining bots lets try to path their way')
@@ -1486,7 +1599,6 @@ def simplify_sys(system, field, debug=False):
                             if debug:
                                 print('The movements were made')
                                 print_system(system)
-                            changed = True
                         else:
                             if debug:
                                 print('The movements could not be made')
@@ -1515,7 +1627,6 @@ def simplify_sys(system, field, debug=False):
                         if debug:
                             print('The movements were made')
                             print_system(system)
-                        changed = True
                     else:
                         if debug:
                             print('The movements could not be made')
@@ -1527,6 +1638,26 @@ def simplify_sys(system, field, debug=False):
             else:
                 if debug:
                     print('But no bots need to move into occupied')
+
+        elif len(d['target_occupied_not_occupied']) > 0:
+            print('system has unoccupied occupied squares and the occupied squares are correct')
+            print('ASSUMING WE USE current_bots_outside TO FILL THE unoccupied Occupied')
+            print('try_movement_sets being called with parameters')
+            print('system = ' + str(system))
+            print('targets = ' + str(d['target_occupied_not_occupied']))
+            print('candidates = ' + str(d['current_bots_outside']))
+            squares = list(set(d['current_bots_in_optional_that_can_move_to_occupied'] + d['current_bots_in_optional_that_can_move_to_other_optional'] + d['movable_bots_in_occupied']))
+            print('squares = ' + str(squares))
+            if try_movement_sets(system,
+                                 d['target_occupied_not_occupied'],
+                                 d['current_bots_outside'],
+                                 squares):
+                if debug:
+                    print('The movements were made')
+                    print_system(system)
+            else:
+                if debug:
+                    print('The movements could not be made')
 
     if debug:
         print('')
@@ -1541,13 +1672,14 @@ def simplify_sys(system, field, debug=False):
     outcome['score_absolute_max'] = d['score_absolute_max']
     outcome['score_gain_required'] = d['score_gain_required']
 
-    if changed:
+    complexity_exit = total_combinations(system)
+    if complexity_exit < complexity_entry:
         if debug:
-            print('The system changed while in simplyfy, running system through simplyfy_system again')
+            print('The system became simpler while in simplyfy, run again')
         return simplify_sys(system, field, True)
     else:
         if debug:
-            print('The system did not change in simplify system, returning')
+            print('The system did not get simpler in simplify system, returning')
         return outcome
 
 
@@ -1806,6 +1938,55 @@ def create_system(bots, field):
     return system
 
 
+def cluster(friendlies, enemies):
+    # lookup = {}
+    groups = []
+    for friends, foes in [(friendlies, enemies)]:
+        output = []
+        for robot in friends:
+            # lookup[robot] = {
+            #         'ratio': [],
+            #         'members': []
+            #     }
+            ratio = []
+            members = []
+            within = []
+            for distance in range(1, 24):
+                squares = set(squares_dist(robot, distance))
+                within += list(squares & friends)
+                if squares & foes:
+                    ratio.append(len(within) / float(distance))
+                    members.append(copy.copy(within))
+                    break
+            else:
+                ratio.append(len(within) / float(distance))
+                members.append(copy.copy(within))
+            max_ratio = max(ratio)
+            grp_dist = ratio.index(max_ratio)
+            output.append((robot, max_ratio, members[grp_dist]))
+        output = filter(lambda x: x[1] > 0.0, output)
+        output.sort(key=lambda x: x[1])
+        print(output)
+        out = []
+        taken = []
+        for member in output[:]:
+            if member[0] not in taken and set(member[2]) & set(taken) == set():
+                result = [member[0]]
+                result += member[2]
+                for tmp in output:
+                    if tmp[0] in result:
+                        result += tmp[2]
+                    elif set(tmp[2]) & set(result):
+                        result += [tmp[0]]
+
+                group = list(set(result))
+                out.append(group)
+                taken += group
+
+        return out
+
+
+
 class Robot:
 
     def act(self, game):
@@ -1824,11 +2005,17 @@ class Robot:
             turn = game_turn - 1
 
 
+            groups = cluster(friendlies, enemies)
+            print('There are ' + str(len(groups)) + ' groups')
+            for group in groups:
+                print(group)
+
+
             ## Level 4 logic
             available_members = [x for x in friendlies]
             frontline_radius = find_frontline_radius(friendlies, 1)
             print('frontline_radius = ' + str(frontline_radius))
-            frontlinelogic = level4_field(frontline_radius, max_points=40, width=1, step=2)
+            frontlinelogic = level4_field(frontline_radius, max_points=40, width=1, step=1)
 
             health_diffs = {}
             attack_ratio = {}
@@ -1850,7 +2037,7 @@ class Robot:
                     attack_ratio[robot] = strength
 
                     # Calculate vunerability
-                    for distance in range(1, 25):
+                    for distance in range(1, 24):
                         if set(squares_dist(robot, distance)) & set(team):
                             vulnerability[robot] = distance
                             break
@@ -1866,11 +2053,19 @@ class Robot:
                 print('health_diffs = {0:2d}'.format(health_diffs[bot]))
 
 
+
+
             if turn % 10 == 9:
                 for x, y in spawn:
                    frontlinelogic[y][x] = 10
                 for x, y in deepspawn:
                    frontlinelogic[y][x] = 0
+
+            for enemy in enemies:
+                for distance, danger in [(1, 2), (2, 1)]:
+                    for x, y in squares_dist(enemy, distance):
+                        if within_bounds((x, y)):
+                            frontlinelogic[y][x] -= danger
 
             print_field(frontlinelogic)
             system = create_system(friendlies, frontlinelogic)

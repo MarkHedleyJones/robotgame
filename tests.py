@@ -604,151 +604,125 @@ def path_walk(path):
             bang.append((option, rem_options))
         return [[here] + path_walk(there) for here, there in copy.deepcopy(bang)]
 
-############################################################################################
 #############################################################################################
 #############################################################################################
 #############################################################################################
-#
-#
-# class Cell(object):
-#     def __init__(self, x, y, reachable):
-#         """
-#         Initialize new cell
-
-#         @param x cell x coordinate
-#         @param y cell y coordinate
-#         @param reachable is cell reachable? not a wall?
-#         """
-#         self.reachable = reachable
-#         self.x = x
-#         self.y = y
-#         self.parent = None
-#         self.g = 0
-#         self.h = 0
-#         self.f = 0
-
-# class AStar(object):
-
-#     def __init__(self):
-#         self.op = []
-#         heapq.heapify(self.op)
-#         self.cl = set()
-#         self.cells = []
-#         self.gridHeight = 19
-#         self.gridWidth = 19
-
-#     def init_grid(self):
-#         # walls = ((0, 5), (1, 0), (1, 1), (1, 5), (2, 3),
-#         #          (3, 1), (3, 2), (3, 5), (4, 1), (4, 4), (5, 1))
-
-#         available = ((6, 9), (10, 11), (9, 8), (8, 9), (12, 9), (10, 8),
-#                      (11, 10), (10, 7), (8, 10), (9, 11), (7, 10),
-#                      (10, 9), (9, 7), (8, 11), (11, 9), (9, 10), (8, 7),
-#                      (9, 6), (7, 9), (10, 10), (11, 8), (8, 8), (7, 8),
-#                      (9, 12), (9, 5))
-
-#         for x in range(self.gridWidth):
-#             for y in range(self.gridHeight):
-#                 if (x, y) in available:
-#                     reachable = True
-#                 else:
-#                     reachable = False
-#                 self.cells.append(Cell(x, y, reachable))
-
-#         self.start = self.get_cell(9, 5)
-#         self.end = self.get_cell(9, 12)
-
-#     def get_heuristic(self, cell):
-#         """
-#         Compute the heuristic value H for a cell: distance between
-#         this cell and the ending cell multiply by 10.
-
-#         @param cell
-#         @returns heuristic value H
-#         """
-#         return 10 * (abs(cell.x - self.end.x) + abs(cell.y - self.end.y))
-
-#     def get_cell(self, x, y):
-#         """
-#         Returns a cell from the cells list
-
-#         @param x cell x coordinate
-#         @param y cell y coordinate
-#         @returns cell
-#         """
-#         return self.cells[x * self.gridHeight + y]
-
-#     def get_adjacent_cells(self, cell):
-#         """
-#         Returns adjacent cells to a cell. Clockwise starting
-#         from the one on the right.
-
-#         @param cell get adjacent cells for this cell
-#         @returns adjacent cells list
-#         """
-#         cells = []
-#         if cell.x < self.gridWidth-1:
-#             cells.append(self.get_cell(cell.x+1, cell.y))
-#         if cell.y > 0:
-#             cells.append(self.get_cell(cell.x, cell.y-1))
-#         if cell.x > 0:
-#             cells.append(self.get_cell(cell.x-1, cell.y))
-#         if cell.y < self.gridHeight-1:
-#             cells.append(self.get_cell(cell.x, cell.y+1))
-#         return cells
-
-#     def display_path(self):
-#         cell = self.end
-#         while cell.parent is not self.start:
-#             cell = cell.parent
-#             print 'path: cell: %d,%d' % (cell.x, cell.y)
+#############################################################################################
 
 
-#     def update_cell(self, adj, cell):
-#         """
-#         Update adjacent cell
+class Cell(object):
+    def __init__(self, x, y):
+        """
+        Initialize new cell
 
-#         @param adj adjacent cell to current cell
-#         @param cell current cell being processed
-#         """
-#         adj.g = cell.g + 10
-#         adj.h = self.get_heuristic(adj)
-#         adj.parent = cell
-#         adj.f = adj.h + adj.g
+        @param x cell x coordinate
+        @param y cell y coordinate
+        @param reachable is cell reachable? not a wall?
+        """
+        self.x = x
+        self.y = y
+        self.parent = None
+        self.g = 0
+        self.h = 0
+        self.f = 0
 
-#     def process(self):
-#         # add starting cell to open heap queue
-#         heapq.heappush(self.op, (self.start.f, self.start))
-#         while len(self.op):
-#             # pop cell from heap queue
-#             f, cell = heapq.heappop(self.op)
-#             # add cell to closed list so we don't process it twice
-#             self.cl.add(cell)
-#             # if ending cell, display found path
-#             if cell is self.end:
-#                 self.display_path()
-#                 break
-#             # get adjacent cells for cell
-#             adj_cells = self.get_adjacent_cells(cell)
-#             for c in adj_cells:
-#                 if c.reachable and c not in self.cl:
-#                     if (c.f, c) in self.op:
-#                         # if adj cell in open list, check if current path is
-#                         # better than the one previously found for this adj
-#                         # cell.
-#                         if c.g > cell.g + 10:
-#                             self.update_cell(c, cell)
-#                     else:
-#                         self.update_cell(c, cell)
-#                         # add adj cell to open list
-#                         heapq.heappush(self.op, (c.f, c))
+class AStar(object):
+
+    def __init__(self, available_coords):
+        self.op = []
+        heapq.heapify(self.op)
+        self.cl = set()
+        self.cells = []
+        self.gridHeight = 19
+        self.gridWidth = 19
+        self.available_coords = available_coords
 
 
+    def find_path(self, start, end):
+        path = []
+        self.cells = []
+        for x, y in self.available_coords:
+            print('appending cell ' + str((x,y)))
+            self.cells.append(Cell(x, y))
+        self.cells.append(Cell(start[0], start[1]))
+        self.cells.append(Cell(end[0], end[1]))
+        self.end = self.get_cell(start[0], start[1])
+        self.start = self.get_cell(end[0], end[1])
+
+        # add starting cell to open heap queue
+        heapq.heappush(self.op, (self.start.f, self.start))
+        while len(self.op):
+            # pop cell from heap queue
+            f, cell = heapq.heappop(self.op)
+            # add cell to closed list so we don't process it twice
+            self.cl.add(cell)
+            # if ending cell, display found path
+            if cell is self.end:
+                return self.return_path()
+
+            # get adjacent cells for cell
+            adj_cells = self.get_adjacent_cells(cell)
+            for c in adj_cells:
+                if (c.x, c.y) in self.available_coords and c not in self.cl:
+                    if (c.f, c) in self.op:
+                        # if adj cell in open list, check if current path is
+                        # better than the one previously found for this adj
+                        # cell.
+                        if c.g > cell.g + 10:
+                            self.update_cell(c, cell)
+                    else:
+                        self.update_cell(c, cell)
+                        # add adj cell to open list
+                        heapq.heappush(self.op, (c.f, c))
 
 
+    def get_heuristic(self, cell):
+        """
+        Compute the heuristic value H for a cell: distance between
+        this cell and the ending cell multiply by 10.
 
-# a = AStar()
-# a.process()
+        @param cell
+        @returns heuristic value H
+        """
+        return (abs(cell.x - self.end.x) + abs(cell.y - self.end.y)) * 10
+
+    def get_cell(self, x, y):
+        """
+        Returns a cell from the cells list
+
+        @param x cell x coordinate
+        @param y cell y coordinate
+        @returns cell
+        """
+        # return self.cells[x * self.gridHeight + y]
+        return [cell for cell in self.cells if cell.x == x and cell.y == y][0]
+
+    def get_adjacent_cells(self, cell):
+        return [self.get_cell(x, y) for x, y in adjacent((cell.x, cell.y)) if (x, y) in self.available_coords]
+
+    def return_path(self):
+        path = []
+        cell = self.end
+        while cell.parent is not self.start:
+            path.append((cell.x, cell.y))
+            cell = cell.parent
+        path.append((cell.x, cell.y))
+        path.append((self.start.x, self.start.y))
+        return path
+
+
+    def update_cell(self, adj, cell):
+        """
+        Update adjacent cell
+
+        @param adj adjacent cell to current cell
+        @param cell current cell being processed
+        """
+        adj.g = cell.g + 10
+        adj.h = self.get_heuristic(adj)
+        adj.parent = cell
+        adj.f = adj.h + adj.g
+
 
 
 
@@ -779,43 +753,49 @@ def shortest_paths(start, end, available_squares):
     return path_walk(squares_by_dist)
 
 
+# def find_paths(start, end, available):
+#     """
+#     Return a list of the shortest possible paths between
+#     the given start and end points
+#     """
+#     print('')
+#     print('find_paths called with')
+#     print('start = ' + str(start))
+#     print('end = ' + str(end))
+#     print('available = ' + str(available))
+#     path_nest = shortest_paths(start, end, available)
+#     print('PRINGING PATH NEST!!!')
+#     ppn(path_nest, 0)
+
+
+#     print('path_nest = ' + str(path_nest))
+#     flat_nest = flaten_pathnest(path_nest)
+#     print('flat_nest = ' + str(flat_nest))
+#     paths = []
+#     tmp = []
+#     last_level = -1
+#     for node, level in flat_nest:
+#         for i in range(level):
+#             print('\t'),
+#         print(node)
+#         try:
+#             tmp[level] = node
+#         except:
+#             tmp.append(node)
+
+#         if node == end:
+#             print('TMP = ' + str(tmp))
+#             paths.append(tmp)
+#             tmp = tmp[:level]
+#         last_level = level
+#     sys.exit()
+#     return paths
+
 def find_paths(start, end, available):
-    """
-    Return a list of the shortest possible paths between
-    the given start and end points
-    """
-    print('')
-    print('find_paths called with')
-    print('start = ' + str(start))
-    print('end = ' + str(end))
-    print('available = ' + str(available))
-    path_nest = shortest_paths(start, end, available)
-    print('PRINGING PATH NEST!!!')
-    ppn(path_nest, 0)
-
-
-    print('path_nest = ' + str(path_nest))
-    flat_nest = flaten_pathnest(path_nest)
-    print('flat_nest = ' + str(flat_nest))
-    paths = []
-    tmp = []
-    last_level = -1
-    for node, level in flat_nest:
-        for i in range(level):
-            print('\t'),
-        print(node)
-        try:
-            tmp[level] = node
-        except:
-            tmp.append(node)
-
-        if node == end:
-            print('TMP = ' + str(tmp))
-            paths.append(tmp)
-            tmp = tmp[:level]
-        last_level = level
+    a = AStar(available)
+    print(a.find_path(start, end))
     sys.exit()
-    return paths
+
 
 
 def try_movement_sets(system, targets, candidates, squares):
